@@ -1,0 +1,188 @@
+# Forum Fortress Plugin License
+
+Version 1.0
+
+Copyright (c) 2026 Forum Fortress. All rights reserved.
+
+## 1. Purpose
+
+This license applies to Forum Fortress plugins, extensions, add-ons, connectors,
+and related integration software distributed with this license (the "Plugin").
+
+The source code is made available so that users may inspect the Plugin,
+understand how it operates, identify problems, and contribute improvements.
+
+The Plugin is source-available software. It is not distributed under an
+open-source or free-software license.
+
+## 2. Permission to use
+
+Subject to this license, permission is granted to:
+
+a. download and install unmodified copies of the Plugin;
+
+b. run unmodified copies of the Plugin solely for use with the official
+Forum Fortress service;
+
+c. inspect and review the source code for personal, operational, security,
+compatibility, educational, or evaluation purposes; and
+
+d. make private modifications where reasonably necessary to investigate a
+bug, test a fix, improve compatibility, or prepare a contribution for
+submission to Forum Fortress.
+
+Temporary use of a privately modified copy for development or testing is
+permitted for these purposes.
+
+Modified copies may not be used in production except with prior written
+permission from Forum Fortress or after the relevant modification has been
+incorporated into an official Forum Fortress release.
+
+## 3. Contributions
+
+Bug fixes, compatibility improvements, translations, documentation changes,
+and other contributions are welcome.
+
+You may create and submit modifications to Forum Fortress through its
+designated source repository, issue tracker, or another contribution channel
+authorised by Forum Fortress.
+
+By intentionally submitting a contribution, you:
+
+a. retain copyright in your contribution;
+
+b. confirm that you have the right to submit and license the contribution; and
+
+c. grant Forum Fortress a perpetual, worldwide, irrevocable, royalty-free,
+transferable and sublicensable license to use, reproduce, modify, adapt,
+publish, distribute, sublicense, relicense, and otherwise incorporate the
+contribution into Forum Fortress software, services, documentation, and
+future releases.
+
+Submitting a contribution does not grant permission to distribute or operate
+your own modified version of the Plugin except as otherwise permitted by this
+license.
+
+## 4. Authorised distribution
+
+Unmodified copies of the Plugin may be distributed through software
+directories, package repositories, application marketplaces, hosting
+services, or other distribution channels where Forum Fortress has:
+
+a. submitted or published the Plugin itself;
+
+b. expressly authorised distribution; or
+
+c. made the Plugin available through a mechanism intended for redistribution
+through that channel.
+
+Such distribution must preserve this license, copyright notices, and any
+other notices included with the Plugin.
+
+This permission does not allow a distributor to modify, rebrand, sublicense,
+or sell the Plugin as a separate product unless Forum Fortress has expressly
+agreed otherwise.
+
+## 5. Restrictions
+
+Except where expressly permitted by this license or required by applicable
+law, you may not:
+
+a. distribute, publish, sublicense, sell, rent, lease, or otherwise make
+modified copies of the Plugin available to third parties;
+
+b. use modified copies of the Plugin in production;
+
+c. use the Plugin, its source code, or substantial portions of either as the
+basis of a competing or substitute product or hosted service;
+
+d. rebrand the Plugin or represent a modified or unofficial version as an
+official Forum Fortress product;
+
+e. remove or obscure copyright, licensing, attribution, or other proprietary
+notices contained in the Plugin; or
+
+f. use the Forum Fortress name, logo, trademarks, service marks, or branding
+in a way that suggests sponsorship, endorsement, partnership, or official
+status without permission.
+
+Nothing in this license prevents the independent development of software or
+services that perform similar functions where Forum Fortress source code or
+other protected Forum Fortress material has not been copied or used in their
+development.
+
+## 6. Forum Fortress service
+
+This license applies only to the Plugin.
+
+It does not grant any right or license to the Forum Fortress hosted service,
+API infrastructure, server-side software, detection systems, datasets,
+models, threat intelligence, administrative systems, or other technology
+operated by Forum Fortress.
+
+Access to and use of the Forum Fortress service is governed separately by the
+applicable Forum Fortress Terms of Service and Privacy Policy.
+
+## 7. Ownership
+
+Forum Fortress and its licensors retain all rights, title, and interest in
+the Plugin except for the limited permissions expressly granted by this
+license.
+
+No rights are granted by implication, estoppel, or otherwise.
+
+Contributors retain copyright in their individual contributions subject to
+the rights granted under Section 3.
+
+## 8. Termination
+
+Your rights under this license terminate automatically if you materially
+breach its terms.
+
+If the breach is capable of being remedied and you remedy it within 30 days
+of becoming aware of it, Forum Fortress may regard your rights as reinstated.
+
+On termination, you must stop any use, modification, or distribution that is
+not otherwise permitted by law.
+
+The provisions concerning ownership, contributions, warranty, and liability
+continue to apply after termination.
+
+## 9. Warranty
+
+The Plugin is provided "as is" and without warranty of any kind, express or
+implied, including but not limited to warranties of merchantability, fitness
+for a particular purpose, and non-infringement.
+
+Forum Fortress does not warrant that the Plugin will be uninterrupted,
+error-free, compatible with every environment, or suitable for any particular
+purpose.
+
+## 10. Liability
+
+To the maximum extent permitted by applicable law, Forum Fortress and its
+suppliers, licensors, and contributors will not be liable for any claim,
+loss, damage, cost, or other liability arising from or relating to the Plugin
+or its use.
+
+Nothing in this license excludes or restricts any liability or right that
+cannot lawfully be excluded or restricted.
+
+## 11. Other rights
+
+This license grants only the permissions expressly stated above.
+
+Forum Fortress may separately grant additional permissions, including
+permission for modified distributions, hosting-provider integrations,
+commercial bundling, OEM arrangements, or other uses.
+
+Any such additional permission must be provided or authorised by Forum
+Fortress.
+
+## 12. License versions
+
+Forum Fortress may publish revised versions of this license.
+
+A revised license does not retroactively change the terms applicable to a copy
+of the Plugin already supplied under an earlier version unless you expressly
+agree to the revised terms.

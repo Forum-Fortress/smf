@@ -1,0 +1,268 @@
+<?xml version="1.0"?>
+<package-info xmlns="http://www.simplemachines.org/xml/package-info" xmlns:smf="http://www.simplemachines.org/">
+	<id>forumfortress:protect</id>
+	<name>Forum Fortress Protect</name>
+	<type>modification</type>
+	<version>1.0.3</version>
+	<install for="2.1 - 2.1.99">
+		<require-file name="Sources/ForumFortressProtect.php" destination="$sourcedir" />
+		<require-file name="Sources/ForumFortressScheduled.php" destination="$sourcedir" />
+		<require-file name="Sources/ManageForumFortress.php" destination="$sourcedir" />
+		<require-dir name="Sources/ForumFortress" destination="$sourcedir" />
+		<require-file name="Themes/default/languages/ForumFortressProtect.english.php" destination="$languagedir" />
+		<require-file name="Themes/default/ForumFortressProtect.template.php" destination="$themedir" />
+		<hook hook="integrate_pre_load" function="ffp_scheduled_pre_load" file="$sourcedir/ForumFortressScheduled.php" />
+		<hook hook="integrate_register_check" function="ffp_integrate_register_check" file="$sourcedir/ForumFortressProtect.php" />
+		<hook hook="integrate_register_after" function="ffp_integrate_register_after" file="$sourcedir/ForumFortressProtect.php" />
+		<hook hook="integrate_post2_pre" function="ffp_integrate_post2_pre" file="$sourcedir/ForumFortressProtect.php" />
+		<hook hook="integrate_after_create_post" function="ffp_integrate_after_create_post" file="$sourcedir/ForumFortressProtect.php" />
+		<hook hook="integrate_profile_save" function="ffp_integrate_profile_save" file="$sourcedir/ForumFortressProtect.php" />
+		<hook hook="integrate_after_approve_posts" function="ffp_integrate_after_approve_posts" file="$sourcedir/ForumFortressProtect.php" />
+		<hook hook="integrate_modify_modifications" function="ffp_integrate_modify_modifications" file="$sourcedir/ForumFortressProtect.php" />
+		<hook hook="integrate_admin_areas" function="ffp_integrate_admin_areas" file="$sourcedir/ForumFortressProtect.php" />
+		<code name="install_defaults.php" type="inline"><![CDATA[
+			<?php
+			updateSettings(array(
+				'ffprotect_enabled' => '1',
+				'ffprotect_api_base_url' => 'https://api.ffapi.net',
+				'ffprotect_api_region' => 'global',
+				'ffprotect_allow_global_fallback' => '0',
+				'ffprotect_control_base_url' => 'https://control.ffapi.net',
+				'ffprotect_timeout' => '3',
+				'ffprotect_fail_open' => '1',
+				'ffprotect_debug_log' => '0',
+				'ffprotect_send_ham' => '1',
+				'ffprotect_delete_rejected_users' => '0',
+				'ffprotect_bypass_administrators' => '1',
+				'ffprotect_bypass_moderators' => '1',
+				'ffprotect_endpoint_state' => '{}',
+			));
+		]]></code>
+		<code name="install_scheduled_task.php" type="inline"><![CDATA[
+			<?php
+			$ffp_now = time();
+			$ffp_next = $ffp_now + 300;
+			$ffp_task = 'ffprotect_endpoint';
+			$ffp_hourly_task = 'ffprotect_hourly_sync';
+			$ffp_endpoint_callable = 'scheduled_ffprotect_endpoint_catalog';
+			$ffp_hourly_callable = 'scheduled_ffprotect_hourly_sync';
+			$smcFunc['db_insert']('ignore',
+				'{db_prefix}scheduled_tasks',
+				array(
+					'next_time' => 'int',
+					'time_offset' => 'int',
+					'time_regularity' => 'int',
+					'time_unit' => 'string-1',
+					'disabled' => 'int',
+					'task' => 'string-24',
+					'callable' => 'string-60',
+				),
+				array($ffp_next, 0, 4, 'h', 0, $ffp_task, $ffp_endpoint_callable),
+				array('task')
+			);
+			$smcFunc['db_insert']('ignore',
+				'{db_prefix}scheduled_tasks',
+				array(
+					'next_time' => 'int',
+					'time_offset' => 'int',
+					'time_regularity' => 'int',
+					'time_unit' => 'string-1',
+					'disabled' => 'int',
+					'task' => 'string-24',
+					'callable' => 'string-60',
+				),
+				array($ffp_next, 0, 10, 'm', 0, $ffp_hourly_task, $ffp_hourly_callable),
+				array('task')
+			);
+			$smcFunc['db_query']('', '
+				UPDATE {db_prefix}scheduled_tasks
+				SET next_time = CASE WHEN next_time < {int:now} THEN {int:next_time} ELSE next_time END,
+					time_offset = {int:time_offset},
+					time_regularity = {int:time_regularity},
+					time_unit = {string:time_unit},
+					disabled = {int:disabled},
+					callable = {string:callable}
+				WHERE task = {string:task}',
+				array(
+					'now' => $ffp_now,
+					'next_time' => $ffp_next,
+					'time_offset' => 0,
+					'time_regularity' => 4,
+					'time_unit' => 'h',
+					'disabled' => 0,
+					'callable' => $ffp_endpoint_callable,
+					'task' => $ffp_task,
+				)
+			);
+			$smcFunc['db_query']('', '
+				UPDATE {db_prefix}scheduled_tasks
+				SET next_time = CASE WHEN next_time < {int:now} THEN {int:next_time} ELSE next_time END,
+					time_offset = {int:time_offset},
+					time_regularity = {int:time_regularity},
+					time_unit = {string:time_unit},
+					disabled = {int:disabled},
+					callable = {string:callable}
+				WHERE task = {string:task}',
+				array(
+					'now' => $ffp_now,
+					'next_time' => $ffp_next,
+					'time_offset' => 0,
+					'time_regularity' => 10,
+					'time_unit' => 'm',
+					'disabled' => 0,
+					'callable' => $ffp_hourly_callable,
+					'task' => $ffp_hourly_task,
+				)
+			);
+		]]></code>
+		</install>
+		<upgrade from="1.0.1 - 1.0.2" for="2.1 - 2.1.99">
+			<require-file name="Sources/ForumFortressProtect.php" destination="$sourcedir" />
+			<require-file name="Sources/ForumFortressScheduled.php" destination="$sourcedir" />
+			<require-file name="Sources/ManageForumFortress.php" destination="$sourcedir" />
+			<require-dir name="Sources/ForumFortress" destination="$sourcedir" />
+			<require-file name="Themes/default/languages/ForumFortressProtect.english.php" destination="$languagedir" />
+			<require-file name="Themes/default/ForumFortressProtect.template.php" destination="$themedir" />
+			<code name="upgrade_defaults.php" type="inline"><![CDATA[
+				<?php
+				$ffp_region_map = array(
+					'global' => 'https://api.ffapi.net',
+					'uk' => 'https://api-uk.ffapi.net',
+					'eu' => 'https://api-eu.ffapi.net',
+					'us' => 'https://api-us.ffapi.net',
+				);
+				if (isset($modSettings['ffprotect_api_region']))
+				{
+					$ffp_region = strtolower(trim((string) $modSettings['ffprotect_api_region']));
+					if (!isset($ffp_region_map[$ffp_region]))
+						$ffp_region = 'global';
+				}
+				else
+				{
+					$ffp_legacy_base = strtolower(rtrim((string) ($modSettings['ffprotect_api_base_url'] ?? ''), '/'));
+					$ffp_region = array_search($ffp_legacy_base, $ffp_region_map, true);
+					if ($ffp_region === false)
+						$ffp_region = 'global';
+				}
+				updateSettings(array(
+					'ffprotect_api_region' => $ffp_region,
+					'ffprotect_allow_global_fallback' => isset($modSettings['ffprotect_allow_global_fallback'])
+						? (string) $modSettings['ffprotect_allow_global_fallback']
+						: '0',
+					'ffprotect_api_base_url' => $ffp_region_map[$ffp_region],
+					'ffprotect_preferred_endpoint' => '',
+				));
+			]]></code>
+			<code name="upgrade_scheduled_task.php" type="inline"><![CDATA[
+				<?php
+				$ffp_now = time();
+				$ffp_next = $ffp_now + 300;
+				$ffp_task = 'ffprotect_endpoint';
+				$ffp_hourly_task = 'ffprotect_hourly_sync';
+				$ffp_endpoint_callable = 'scheduled_ffprotect_endpoint_catalog';
+				$ffp_hourly_callable = 'scheduled_ffprotect_hourly_sync';
+				$smcFunc['db_query']('', '
+					DELETE FROM {db_prefix}scheduled_tasks
+					WHERE task IN ({array_string:tasks})
+						OR callable IN ({array_string:callables})',
+					array(
+						'tasks' => array('ffprotect_endpoint', 'ffprotect_endpoint_catal', 'ffprotect_endpoint_catalog', 'ffprotect_hourly_sync'),
+						'callables' => array('scheduled_ffprotect_endpoint_catalog', 'scheduled_ffprotect_hourly_sync'),
+					)
+				);
+				$smcFunc['db_insert']('ignore',
+					'{db_prefix}scheduled_tasks',
+					array(
+						'next_time' => 'int',
+						'time_offset' => 'int',
+						'time_regularity' => 'int',
+						'time_unit' => 'string-1',
+						'disabled' => 'int',
+						'task' => 'string-24',
+						'callable' => 'string-60',
+					),
+					array($ffp_next, 0, 4, 'h', 0, $ffp_task, $ffp_endpoint_callable),
+					array('task')
+				);
+				$smcFunc['db_insert']('ignore',
+					'{db_prefix}scheduled_tasks',
+					array(
+						'next_time' => 'int',
+						'time_offset' => 'int',
+						'time_regularity' => 'int',
+						'time_unit' => 'string-1',
+						'disabled' => 'int',
+						'task' => 'string-24',
+						'callable' => 'string-60',
+					),
+					array($ffp_next, 0, 10, 'm', 0, $ffp_hourly_task, $ffp_hourly_callable),
+					array('task')
+				);
+			]]></code>
+			<remove-file name="Themes/default/default/languages/ForumFortressProtect.english.php" />
+			<remove-file name="Themes/default/default/ForumFortressProtect.template.php" />
+		</upgrade>
+	<uninstall for="2.1 - 2.1.99">
+		<hook hook="integrate_pre_load" function="ffp_scheduled_pre_load" file="$sourcedir/ForumFortressScheduled.php" reverse="true" />
+		<hook hook="integrate_register_check" function="ffp_integrate_register_check" file="$sourcedir/ForumFortressProtect.php" reverse="true" />
+		<hook hook="integrate_register_after" function="ffp_integrate_register_after" file="$sourcedir/ForumFortressProtect.php" reverse="true" />
+		<hook hook="integrate_post2_pre" function="ffp_integrate_post2_pre" file="$sourcedir/ForumFortressProtect.php" reverse="true" />
+		<hook hook="integrate_after_create_post" function="ffp_integrate_after_create_post" file="$sourcedir/ForumFortressProtect.php" reverse="true" />
+		<hook hook="integrate_profile_save" function="ffp_integrate_profile_save" file="$sourcedir/ForumFortressProtect.php" reverse="true" />
+		<hook hook="integrate_after_approve_posts" function="ffp_integrate_after_approve_posts" file="$sourcedir/ForumFortressProtect.php" reverse="true" />
+		<hook hook="integrate_modify_modifications" function="ffp_integrate_modify_modifications" file="$sourcedir/ForumFortressProtect.php" reverse="true" />
+		<hook hook="integrate_admin_areas" function="ffp_integrate_admin_areas" file="$sourcedir/ForumFortressProtect.php" reverse="true" />
+		<code name="uninstall_cleanup.php" type="inline"><![CDATA[
+			<?php
+			global $smcFunc, $modSettings;
+
+			$smcFunc['db_query']('', '
+				DELETE FROM {db_prefix}scheduled_tasks
+				WHERE task IN ({array_string:tasks})
+					OR callable IN ({array_string:callables})',
+				array(
+					'tasks' => array('ffprotect_endpoint', 'ffprotect_endpoint_catal', 'ffprotect_endpoint_catalog', 'ffprotect_hourly_sync'),
+					'callables' => array('scheduled_ffprotect_endpoint_catalog', 'scheduled_ffprotect_hourly_sync'),
+				)
+			);
+
+			$ffp_settings = array(
+				'ffprotect_enabled',
+				'ffprotect_api_base_url',
+				'ffprotect_api_region',
+				'ffprotect_allow_global_fallback',
+				'ffprotect_control_base_url',
+				'ffprotect_preferred_endpoint',
+				'ffprotect_timeout',
+				'ffprotect_fail_open',
+				'ffprotect_api_key',
+				'ffprotect_site_id',
+				'ffprotect_primary_domain',
+				'ffprotect_debug_log',
+				'ffprotect_send_ham',
+				'ffprotect_delete_rejected_users',
+				'ffprotect_bypass_administrators',
+				'ffprotect_bypass_moderators',
+				'ffprotect_endpoint_state',
+				'ffprotect_cron_sync_last',
+				'ffprotect_timeout_pending',
+				'ffprotect_timeout_post_meta',
+			);
+			$smcFunc['db_query']('', '
+				DELETE FROM {db_prefix}settings
+				WHERE variable IN ({array_string:settings})',
+				array(
+					'settings' => $ffp_settings,
+				)
+			);
+			foreach ($ffp_settings as $ffp_setting)
+				unset($modSettings[$ffp_setting]);
+		]]></code>
+		<remove-file name="Sources/ForumFortressProtect.php" />
+		<remove-file name="Sources/ForumFortressScheduled.php" />
+		<remove-file name="Sources/ManageForumFortress.php" />
+		<remove-dir name="Sources/ForumFortress" />
+		<remove-file name="Themes/default/languages/ForumFortressProtect.english.php" />
+		<remove-file name="Themes/default/ForumFortressProtect.template.php" />
+	</uninstall>
+</package-info>
