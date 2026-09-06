@@ -120,6 +120,13 @@ final class FfApiResilience
 	{
 		$keyType = isset($bootstrapResponse['key_type']) ? (string) $bootstrapResponse['key_type'] : '';
 		$apiKey = isset($bootstrapResponse['api_key']) ? (string) $bootstrapResponse['api_key'] : '';
+		/* Only an identity-bearing bootstrap/status response is authoritative for
+		 * route ownership. Ordinary check/report responses must not silently erase
+		 * the issuer pin for an offline bootstrap credential. */
+		if ($apiKey === '' && $keyType === '')
+		{
+			return;
+		}
 		if (!self::isOfflineBootstrapKey($apiKey, $keyType !== '' ? $keyType : null))
 		{
 			unset(
