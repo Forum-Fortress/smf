@@ -3,7 +3,7 @@
 	<id>forumfortress:protect</id>
 	<name>Forum Fortress Protect</name>
 	<type>modification</type>
-	<version>1.0.3</version>
+	<version>1.0.8</version>
 	<install for="2.1 - 2.1.99">
 		<require-file name="Sources/ForumFortressProtect.php" destination="$sourcedir" />
 		<require-file name="Sources/ForumFortressScheduled.php" destination="$sourcedir" />
@@ -27,7 +27,6 @@
 				'ffprotect_api_base_url' => 'https://api.ffapi.net',
 				'ffprotect_api_region' => 'global',
 				'ffprotect_allow_global_fallback' => '0',
-				'ffprotect_control_base_url' => 'https://control.ffapi.net',
 				'ffprotect_timeout' => '3',
 				'ffprotect_fail_open' => '1',
 				'ffprotect_debug_log' => '0',
@@ -116,7 +115,7 @@
 			);
 		]]></code>
 		</install>
-		<upgrade from="1.0.1 - 1.0.2" for="2.1 - 2.1.99">
+		<upgrade from="1.0.1 - 1.0.3" for="2.1 - 2.1.99">
 			<require-file name="Sources/ForumFortressProtect.php" destination="$sourcedir" />
 			<require-file name="Sources/ForumFortressScheduled.php" destination="$sourcedir" />
 			<require-file name="Sources/ManageForumFortress.php" destination="$sourcedir" />
@@ -152,6 +151,12 @@
 					'ffprotect_api_base_url' => $ffp_region_map[$ffp_region],
 					'ffprotect_preferred_endpoint' => '',
 				));
+				$smcFunc['db_query']('', '
+					DELETE FROM {db_prefix}settings
+					WHERE variable = {string:legacy_control_setting}',
+					array('legacy_control_setting' => 'ffprotect_control_base_url')
+				);
+				unset($modSettings['ffprotect_control_base_url']);
 			]]></code>
 			<code name="upgrade_scheduled_task.php" type="inline"><![CDATA[
 				<?php

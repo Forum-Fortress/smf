@@ -33,7 +33,6 @@ function ModifyForumFortressSettings(): void
 			'ffprotect_api_base_url' => \FfApiResilience::apiBaseUrlForRegion($api_region),
 			'ffprotect_api_region' => $api_region,
 			'ffprotect_allow_global_fallback' => !empty($_POST['ffprotect_allow_global_fallback']) ? '1' : '0',
-			'ffprotect_control_base_url' => trim((string) ($_POST['ffprotect_control_base_url'] ?? '')),
 			'ffprotect_preferred_endpoint' => '',
 			'ffprotect_timeout' => max(1, (int) ($_POST['ffprotect_timeout'] ?? 3)),
 			'ffprotect_api_key' => trim((string) ($_POST['ffprotect_api_key'] ?? '')),

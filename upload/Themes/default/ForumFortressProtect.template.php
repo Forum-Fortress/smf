@@ -76,7 +76,6 @@ function template_admin_forumfortress(): void
 		echo '<option value="', $region, '"', $selected_region === $region ? ' selected' : '', '>', $label, '</option>';
 	echo '</select></dd>
 				<dt><label for="ffprotect_allow_global_fallback">', $txt['ffp_allow_global_fallback'], '</label><br><small>', $txt['ffp_allow_global_fallback_desc'], '</small></dt><dd><input type="checkbox" name="ffprotect_allow_global_fallback" id="ffprotect_allow_global_fallback"', !empty($ms['ffprotect_allow_global_fallback']) ? ' checked' : '', '></dd>
-				<dt><label for="ffprotect_control_base_url">', $txt['ffp_control_base_url'], '</label></dt><dd><input type="text" name="ffprotect_control_base_url" id="ffprotect_control_base_url" size="60" value="', htmlspecialchars($ms['ffprotect_control_base_url'] ?? 'https://control.ffapi.net'), '"></dd>
 				<dt><label for="ffprotect_timeout">', $txt['ffp_timeout'], '</label></dt><dd><input type="number" min="1" max="30" name="ffprotect_timeout" id="ffprotect_timeout" value="', (int) ($ms['ffprotect_timeout'] ?? 3), '"></dd>
 				<dt><label for="ffprotect_fail_open">', $txt['ffp_fail_open'], '</label></dt><dd><input type="checkbox" name="ffprotect_fail_open" id="ffprotect_fail_open"', !empty($ms['ffprotect_fail_open']) ? ' checked' : '', '></dd>
 				<dt><label for="ffprotect_api_key">', $txt['ffp_api_key'], '</label></dt><dd><input type="text" name="ffprotect_api_key" id="ffprotect_api_key" size="60" value="', htmlspecialchars($ms['ffprotect_api_key'] ?? ''), '"></dd>
@@ -117,7 +116,7 @@ function template_admin_forumfortress(): void
 
 	if (!empty($ffp['latency_rows']))
 	{
-		echo '<section class="ffCard"><div class="ffSectionHeader"><div><strong>', $txt['ffp_section_endpoint_health'], '</strong><span>Measured from this forum server.</span></div></div><table class="table_grid"><thead><tr><th>', $txt['ffp_endpoint_col'], '</th><th>', $txt['ffp_latency_col'], '</th></tr></thead><tbody>';
+		echo '<section class="ffCard"><div class="ffSectionHeader"><div><strong>', $txt['ffp_section_endpoint_health'], '</strong><span>GeoDNS primary followed by same-request fallbacks.</span></div></div><table class="table_grid"><thead><tr><th>', $txt['ffp_endpoint_col'], '</th><th>', $txt['ffp_latency_col'], '</th></tr></thead><tbody>';
 		foreach ($ffp['latency_rows'] as $row)
 		{
 			$pref = !empty($row['is_preferred']) ? ' *' : '';
