@@ -394,16 +394,7 @@ final class FfApiResilience
 			{
 				continue;
 			}
-			// Stale catalog check_ready=false must not hide a live healthy probe (e.g. tier-2 edge).
-			if (
-				$requireCheckReady
-				&& array_key_exists('check_ready', $meta)
-				&& empty($meta['check_ready'])
-				&& !self::isHealthyLatency($ms)
-			)
-			{
-				continue;
-			}
+			// A current healthy probe is authoritative over stale check_ready=false metadata.
 			if ($ms < $bestMs)
 			{
 				$bestMs = (int) $ms;
