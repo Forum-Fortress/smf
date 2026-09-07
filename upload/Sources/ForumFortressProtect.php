@@ -1,4 +1,6 @@
 <?php
+// Copyright (c) 2026 Marscastle Ltd trading as Forum Fortress
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 /**
  * Forum Fortress integration hooks for SMF 2.1.

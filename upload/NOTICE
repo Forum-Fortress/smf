@@ -1,0 +1,21 @@
+Forum Fortress for Simple Machines Forum
+Copyright (c) 2026 Marscastle Ltd trading as Forum Fortress
+SPDX-License-Identifier: GPL-2.0-or-later
+
+The plugin code in this package is free software: you may redistribute it
+and/or modify it under the terms of the GNU General Public License as published
+by the Free Software Foundation, either version 2 of the License or (at your
+option) any later version. See LICENSE for the complete licence text.
+
+The Forum Fortress hosted service is separate. This software licence does not
+provide a service subscription, API credentials, private backend code, datasets
+or infrastructure. Hosted-service access is governed by the applicable Forum
+Fortress service terms and policies.
+
+Forum Fortress names and logos are trademarks claimed by Marscastle Ltd.
+Modified or redistributed versions must not imply Forum Fortress endorsement
+or official status. This clarification does not restrict rights granted by the
+GPL, including lawful descriptive or nominative use.
+
+Portions may be copyright their respective contributors and third parties.
+Third-party components retain their own copyright and licence notices.

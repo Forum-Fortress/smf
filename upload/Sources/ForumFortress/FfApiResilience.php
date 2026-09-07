@@ -1,8 +1,11 @@
 <?php
 /**
+ * Copyright (c) 2026 Marscastle Ltd trading as Forum Fortress
+ * SPDX-License-Identifier: GPL-2.0-or-later
+ *
  * Shared Forum Fortress API resilience helpers (bootstrap / catalog / hot failover).
  *
- * Copied into XenForo, phpBB, and Invision plugin trees on release; keep copies in sync.
+ * Copied into XenForo, phpBB, Invision, and SMF plugin trees on release; keep copies in sync.
  *
  * Manual verification matrix (when changing this file):
  * - fortress.ffapi.net down: bootstrap succeeds via api.ffapi.net or edge /v1/node-endpoints + edge bootstrap
