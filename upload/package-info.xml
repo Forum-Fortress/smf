@@ -3,7 +3,7 @@
 	<id>forumfortress:protect</id>
 	<name>Forum Fortress Protect</name>
 	<type>modification</type>
-	<version>1.0.8</version>
+	<version>1.1.0</version>
 	<install for="2.1 - 2.1.99">
 		<require-file name="Sources/ForumFortressProtect.php" destination="$sourcedir" />
 		<require-file name="Sources/ForumFortressScheduled.php" destination="$sourcedir" />
@@ -41,24 +41,8 @@
 			<?php
 			$ffp_now = time();
 			$ffp_next = $ffp_now + 300;
-			$ffp_task = 'ffprotect_endpoint';
 			$ffp_hourly_task = 'ffprotect_hourly_sync';
-			$ffp_endpoint_callable = 'scheduled_ffprotect_endpoint_catalog';
 			$ffp_hourly_callable = 'scheduled_ffprotect_hourly_sync';
-			$smcFunc['db_insert']('ignore',
-				'{db_prefix}scheduled_tasks',
-				array(
-					'next_time' => 'int',
-					'time_offset' => 'int',
-					'time_regularity' => 'int',
-					'time_unit' => 'string-1',
-					'disabled' => 'int',
-					'task' => 'string-24',
-					'callable' => 'string-60',
-				),
-				array($ffp_next, 0, 4, 'h', 0, $ffp_task, $ffp_endpoint_callable),
-				array('task')
-			);
 			$smcFunc['db_insert']('ignore',
 				'{db_prefix}scheduled_tasks',
 				array(
@@ -86,26 +70,6 @@
 					'now' => $ffp_now,
 					'next_time' => $ffp_next,
 					'time_offset' => 0,
-					'time_regularity' => 4,
-					'time_unit' => 'h',
-					'disabled' => 0,
-					'callable' => $ffp_endpoint_callable,
-					'task' => $ffp_task,
-				)
-			);
-			$smcFunc['db_query']('', '
-				UPDATE {db_prefix}scheduled_tasks
-				SET next_time = CASE WHEN next_time < {int:now} THEN {int:next_time} ELSE next_time END,
-					time_offset = {int:time_offset},
-					time_regularity = {int:time_regularity},
-					time_unit = {string:time_unit},
-					disabled = {int:disabled},
-					callable = {string:callable}
-				WHERE task = {string:task}',
-				array(
-					'now' => $ffp_now,
-					'next_time' => $ffp_next,
-					'time_offset' => 0,
 					'time_regularity' => 10,
 					'time_unit' => 'm',
 					'disabled' => 0,
@@ -115,7 +79,7 @@
 			);
 		]]></code>
 		</install>
-		<upgrade from="1.0.1 - 1.0.3" for="2.1 - 2.1.99">
+		<upgrade from="1.0.1 - 1.0.8" for="2.1 - 2.1.99">
 			<require-file name="Sources/ForumFortressProtect.php" destination="$sourcedir" />
 			<require-file name="Sources/ForumFortressScheduled.php" destination="$sourcedir" />
 			<require-file name="Sources/ManageForumFortress.php" destination="$sourcedir" />
@@ -162,9 +126,7 @@
 				<?php
 				$ffp_now = time();
 				$ffp_next = $ffp_now + 300;
-				$ffp_task = 'ffprotect_endpoint';
 				$ffp_hourly_task = 'ffprotect_hourly_sync';
-				$ffp_endpoint_callable = 'scheduled_ffprotect_endpoint_catalog';
 				$ffp_hourly_callable = 'scheduled_ffprotect_hourly_sync';
 				$smcFunc['db_query']('', '
 					DELETE FROM {db_prefix}scheduled_tasks
@@ -174,20 +136,6 @@
 						'tasks' => array('ffprotect_endpoint', 'ffprotect_endpoint_catal', 'ffprotect_endpoint_catalog', 'ffprotect_hourly_sync'),
 						'callables' => array('scheduled_ffprotect_endpoint_catalog', 'scheduled_ffprotect_hourly_sync'),
 					)
-				);
-				$smcFunc['db_insert']('ignore',
-					'{db_prefix}scheduled_tasks',
-					array(
-						'next_time' => 'int',
-						'time_offset' => 'int',
-						'time_regularity' => 'int',
-						'time_unit' => 'string-1',
-						'disabled' => 'int',
-						'task' => 'string-24',
-						'callable' => 'string-60',
-					),
-					array($ffp_next, 0, 4, 'h', 0, $ffp_task, $ffp_endpoint_callable),
-					array('task')
 				);
 				$smcFunc['db_insert']('ignore',
 					'{db_prefix}scheduled_tasks',

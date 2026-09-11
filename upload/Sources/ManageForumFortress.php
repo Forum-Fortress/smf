@@ -179,7 +179,7 @@ function ModifyForumFortressSettings(): void
 			try
 			{
 				$launch = $client->portal_launch();
-				if (is_array($launch) && !empty($launch['portal_url']))
+				if (is_array($launch) && !empty($launch['portal_url']) && $client->is_safe_portal_url((string) $launch['portal_url']))
 				{
 					$portal_launch_url = (string) $launch['portal_url'];
 					$can_portal = true;

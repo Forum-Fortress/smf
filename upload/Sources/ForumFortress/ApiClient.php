@@ -37,9 +37,11 @@ use function trim;
 class ApiClient
 {
 	public const PLATFORM = 'smf';
-	public const PLUGIN_VERSION = '1.0.8';
+	public const PLUGIN_VERSION = '1.1.0';
 	public const CONTROL_PLANE_BASE_URL = 'https://fortress.ffapi.net';
 	protected const HOURLY_SYNC_MIN_INTERVAL = 540;
+	protected const STANDARD_HEARTBEAT_INTERVAL_SECONDS = 3600;
+	protected const PRO_HEARTBEAT_INTERVAL_SECONDS = 600;
 	protected const ENDPOINT_REFRESH_REQUEST_MAX_DELAY_SECONDS = 60;
 	protected const CONNECTION_TEST_TIMEOUT_SECONDS = 2;
 	protected const CONNECTION_TEST_TOTAL_BUDGET_SECONDS = 5;
@@ -158,28 +160,6 @@ class ApiClient
 				break;
 			}
 		}
-		if (!$response && $this->fetch_node_endpoints_catalog(true))
-		{
-			foreach ($this->bootstrap_bases_ordered() as $base)
-			{
-				$attempt = $this->request_json_on_base(
-					'POST',
-					'/v1/site/bootstrap',
-					$payload,
-					$base,
-					false,
-					null,
-					false
-				);
-				$data = !empty($attempt['ok']) && isset($attempt['data']) && is_array($attempt['data']) ? $attempt['data'] : null;
-				if ($data && !empty($data['api_key']))
-				{
-					$response = $data;
-					break;
-				}
-			}
-		}
-
 		if ($response)
 		{
 			$this->persist_identity($response);
@@ -254,27 +234,7 @@ class ApiClient
 
 	public function health(?int $timeoutOverride = null): ?array
 	{
-		if (!$this->is_enabled())
-		{
-			$this->last_request_error = null;
-			return null;
-		}
-		if (\FfApiResilience::apiRegionIsLocked($this->get_api_region()))
-		{
-			$timeout = max(1, $timeoutOverride ?? self::CONNECTION_TEST_TIMEOUT_SECONDS);
-			foreach (\FfApiResilience::regionLockedCheckBases($this->get_api_region(), $this->allow_global_emergency_fallback()) as $base)
-			{
-				$health = $this->raw_get_json($base, '/health', $timeout);
-				if (($health['status'] ?? 0) >= 200 && ($health['status'] ?? 0) < 300
-					&& is_array($health['data'] ?? null))
-				{
-					return $health['data'];
-				}
-			}
-			return null;
-		}
-
-		return $this->request_json('GET', '/health', [], $timeoutOverride ?? self::CONNECTION_TEST_TIMEOUT_SECONDS);
+		return $this->site_ping();
 	}
 
 	public function capabilities(?int $timeoutOverride = null): ?array
@@ -418,6 +378,36 @@ class ApiClient
 			'platform_version' => SMF_VERSION,
 			'plugin_version' => self::PLUGIN_VERSION,
 		]);
+	}
+
+	public function is_safe_portal_url(string $value): bool
+	{
+		if (trim($value) === '' || filter_var($value, FILTER_VALIDATE_URL) === false)
+		{
+			return false;
+		}
+		$parts = parse_url($value);
+		if (!is_array($parts))
+		{
+			return false;
+		}
+		$host = strtolower((string) ($parts['host'] ?? ''));
+		$trusted_host = $host === 'forumfortress.com'
+			|| substr($host, -strlen('.forumfortress.com')) === '.forumfortress.com'
+			|| $host === 'ffapi.net'
+			|| substr($host, -strlen('.ffapi.net')) === '.ffapi.net';
+		$path = '/' . ltrim((string) ($parts['path'] ?? ''), '/');
+		$query = [];
+		parse_str((string) ($parts['query'] ?? ''), $query);
+		return strtolower((string) ($parts['scheme'] ?? '')) === 'https'
+			&& $trusted_host
+			&& !array_key_exists('user', $parts)
+			&& !array_key_exists('pass', $parts)
+			&& !array_key_exists('fragment', $parts)
+			&& (!array_key_exists('port', $parts) || (int) $parts['port'] === 443)
+			&& rtrim($path, '/') === '/access'
+			&& is_string($query['token'] ?? null)
+			&& trim($query['token']) !== '';
 	}
 
 	/**
@@ -620,20 +610,26 @@ class ApiClient
 		{
 		}
 
-		try
+		$heartbeat_state = $this->load_endpoint_state();
+		$last_heartbeat = max(
+			(int) ($heartbeat_state['last_site_ping_at'] ?? 0),
+			(int) ($heartbeat_state['last_site_ping_attempt_at'] ?? 0)
+		);
+		$plan = strtolower(trim((string) ($heartbeat_state['plan_name'] ?? '')));
+		$heartbeat_interval = in_array($plan, ['pro', 'multimod'], true)
+			? self::PRO_HEARTBEAT_INTERVAL_SECONDS
+			: self::STANDARD_HEARTBEAT_INTERVAL_SECONDS;
+		if ($last_heartbeat <= 0 || (time() - $last_heartbeat) >= $heartbeat_interval)
 		{
-			$this->refresh_endpoint_catalog_and_health();
-		}
-		catch (\Throwable $e)
-		{
-		}
-
-		try
-		{
-			$this->site_ping();
-		}
-		catch (\Throwable $e)
-		{
+			$heartbeat_state['last_site_ping_attempt_at'] = time();
+			$this->save_endpoint_state($heartbeat_state);
+			try
+			{
+				$this->site_ping();
+			}
+			catch (\Throwable $e)
+			{
+			}
 		}
 
 		try
@@ -972,35 +968,27 @@ class ApiClient
 	/** @return list<string> */
 	protected function bootstrap_bases_ordered(): array
 	{
-		if (\FfApiResilience::apiRegionIsLocked($this->get_api_region()))
+		$manual = $this->get_manual_base_url();
+		if (\FfApiResilience::isLocalDevelopmentBaseUrl($manual))
 		{
-			return \FfApiResilience::uniqueOrderedBases(
-				\FfApiResilience::regionLockedCheckBases($this->get_api_region(), $this->allow_global_emergency_fallback()),
-				[$this->get_control_plane_base_url()]
-			);
+			return [$manual];
 		}
-		return \FfApiResilience::bootstrapBasesOrdered(
-			$this->get_control_plane_base_url(),
-			$this->get_hot_failover_api_base_url(),
-			$this->get_manual_base_url(),
-			$this->edge_bases_from_state()
+		return \FfApiResilience::regionLockedCheckBases(
+			$this->get_api_region(),
+			$this->allow_global_emergency_fallback()
 		);
 	}
 
 	/** @return list<string> */
 	protected function catalog_fetch_bases(): array
 	{
-		return \FfApiResilience::catalogFetchBases(
-			$this->get_control_plane_base_url(),
-			$this->get_hot_failover_api_base_url(),
-			$this->edge_bases_from_state()
-		);
+		return $this->bootstrap_bases_ordered();
 	}
 
 	/** @return list<string> */
 	protected function control_plane_request_bases(): array
 	{
-		return $this->catalog_fetch_bases();
+		return $this->bootstrap_bases_ordered();
 	}
 
 	/** @param list<string> $endpoints */
@@ -1033,94 +1021,9 @@ class ApiClient
 	protected function fetch_node_endpoints_catalog(bool $force = false): bool
 	{
 		$state = $this->load_endpoint_state();
-		$previous_endpoints = is_array($state['endpoints'] ?? null) ? $state['endpoints'] : [];
-		$now = (int) time();
-		$stored_generated_at = (int) ($state['catalog_generated_at'] ?? 0);
-
-		if (!$force && !\FfApiResilience::isEndpointCatalogStale($state))
-		{
-			return true;
-		}
-		if (!$force && \FfApiResilience::shouldBackoffEndpointCatalogRefresh($state, $now))
-		{
-			return false;
-		}
-
-		$urls = [];
-		$endpoint_meta = [];
-		foreach ($this->catalog_fetch_bases() as $catalog_base)
-		{
-			$res = $this->raw_get_json($catalog_base, '/v1/node-endpoints', self::CONNECTION_TEST_TIMEOUT_SECONDS);
-			if (($res['status'] ?? 0) < 200 || ($res['status'] ?? 0) >= 300 || !is_array($res['data'] ?? null))
-			{
-				continue;
-			}
-			$data = $res['data'];
-			$live_generated_at = (int) ($data['generated_at'] ?? 0);
-			if (
-				!$force
-				&& !empty($state['catalog_fetched_at'])
-				&& ($now - (int) $state['catalog_fetched_at']) <= \FfApiResilience::ENDPOINT_CATALOG_TTL_SECONDS
-				&& is_array($state['endpoints'] ?? null)
-				&& $state['endpoints']
-				&& ($live_generated_at <= 0 || $live_generated_at <= $stored_generated_at)
-			)
-			{
-				return true;
-			}
-			$endpoints = $data['endpoints'] ?? null;
-			if (!is_array($endpoints))
-			{
-				continue;
-			}
-			$state['control_check_fallback'] = !empty($data['control_check_fallback']);
-			$endpoint_meta = [];
-			foreach ($endpoints as $row)
-			{
-				if (!is_array($row))
-				{
-					continue;
-				}
-				$url = $this->normalise_base_url((string) ($row['url'] ?? ''));
-				if ($url === '')
-				{
-					continue;
-				}
-				$urls[$url] = true;
-				$endpoint_meta[$url] = [
-					'check_ready' => array_key_exists('check_ready', $row) ? (bool) $row['check_ready'] : null,
-					'status' => isset($row['status']) ? (string) $row['status'] : '',
-					'role' => isset($row['role']) ? (string) $row['role'] : '',
-					'traffic_tier' => array_key_exists('traffic_tier', $row)
-						? \FfApiResilience::normaliseTrafficTier($row['traffic_tier'])
-						: null,
-				];
-			}
-			if ($urls)
-			{
-				if ($live_generated_at > 0)
-				{
-					$state['catalog_generated_at'] = $live_generated_at;
-				}
-				break;
-			}
-		}
-		if (!$urls)
-		{
-			\FfApiResilience::noteEndpointCatalogRefreshFailure($state, $now);
-			$this->save_endpoint_state($state);
-
-			return false;
-		}
-		$new_endpoints = array_values(array_keys($urls));
-		if ($this->endpoint_catalog_changed($previous_endpoints, $new_endpoints))
-		{
-			$this->invalidate_endpoint_health_state($state);
-		}
-		$state['catalog_fetched_at'] = $now;
-		$state['endpoints'] = $new_endpoints;
-		$state['endpoint_meta'] = $endpoint_meta;
-		\FfApiResilience::noteEndpointCatalogRefreshSuccess($state);
+		$state['endpoints'] = $this->bootstrap_bases_ordered();
+		$state['catalog_fetched_at'] = 0;
+		unset($state['endpoint_meta'], $state['control_check_fallback'], $state['catalog_generated_at']);
 		$this->save_endpoint_state($state);
 
 		return true;
@@ -1506,16 +1409,12 @@ class ApiClient
 		{
 			return [];
 		}
-		$state = $this->load_endpoint_state();
-		$is_check_path = is_string($request_path) && strpos($request_path, '/v1/check') === 0;
-		if ($is_check_path && \FfApiResilience::apiRegionIsLocked($this->get_api_region()) && !$this->is_offline_api_key())
+		if (\FfApiResilience::isLocalDevelopmentBaseUrl($primary))
 		{
-			return \FfApiResilience::regionLockedCheckBases(
-				$this->get_api_region(),
-				$this->allow_global_emergency_fallback()
-			);
+			return [$primary];
 		}
-		if ($is_check_path && $this->is_offline_api_key())
+		$state = $this->load_endpoint_state();
+		if ($this->is_offline_api_key())
 		{
 			$pinned = \FfApiResilience::offlinePinnedCheckBases($state);
 			if ($pinned)
@@ -1523,44 +1422,10 @@ class ApiClient
 				return $pinned;
 			}
 		}
-		if (is_string($request_path) && \FfApiResilience::isStrictSupernodeSyncPath($request_path))
-		{
-			return \FfApiResilience::moderationSyncBasesOrdered(
-				$this->get_hot_failover_api_base_url(),
-				$this->get_control_plane_base_url()
-			);
-		}
-
-		$endpoints = is_array($state['endpoints'] ?? null) ? $state['endpoints'] : [];
-		$endpoints = array_values(array_filter(array_unique(array_map(function ($url) {
-			return $this->normalise_base_url((string) $url);
-		}, $endpoints))));
-		$endpoint_meta = is_array($state['endpoint_meta'] ?? null) ? $state['endpoint_meta'] : [];
-
-		// GeoDNS owns endpoint choice. Each new request starts at the regional
-		// API hostname; concrete catalog entries are same-request fallbacks only.
-		$out = [$primary];
-		if ($is_check_path)
-		{
-			$catalog_fallbacks = array_values(array_filter($endpoints, function ($base) use ($endpoint_meta) {
-				$meta = isset($endpoint_meta[$base]) && is_array($endpoint_meta[$base]) ? $endpoint_meta[$base] : [];
-				$role = isset($meta['role']) ? (string) $meta['role'] : null;
-				if ($this->is_catalog_backup_endpoint_url((string) $base, $role))
-				{
-					return false;
-				}
-				return !array_key_exists('check_ready', $meta) || !empty($meta['check_ready']);
-			}));
-			$out = \FfApiResilience::uniqueOrderedBases($out, $catalog_fallbacks);
-			$control = $this->normalise_base_url($this->get_control_plane_base_url());
-			if ($control !== '' && (!empty($state['control_check_fallback']) || !$catalog_fallbacks))
-			{
-				$out[] = $control;
-			}
-			return \FfApiResilience::orderCheckBasesControlLast($out, $control);
-		}
-
-		return \FfApiResilience::uniqueOrderedBases($out, $endpoints);
+		return \FfApiResilience::regionLockedCheckBases(
+			$this->get_api_region(),
+			$this->allow_global_emergency_fallback()
+		);
 	}
 	public function build_user_payload(array $user_row = []): array
 	{
@@ -1606,33 +1471,8 @@ class ApiClient
 		{
 			return $result;
 		}
-		if (strpos($path, '/v1/check') === 0)
-		{
-			$this->throw_last_retryable_exception_if_fail_closed($suppress_timeout_error);
-			return null;
-		}
-		try
-		{
-			$this->refresh_endpoint_catalog_and_health(true);
-		}
-		catch (\Throwable $e)
-		{
-		}
-
-		$result = $this->request_json_with_retry_pass(
-			$method,
-			$path,
-			$payload,
-			false,
-			$timeout_override,
-			$suppress_timeout_error,
-			$timeout_retry_attempted
-		);
-		if ($result === null)
-		{
-			$this->throw_last_retryable_exception_if_fail_closed($suppress_timeout_error);
-		}
-		return $result;
+		$this->throw_last_retryable_exception_if_fail_closed($suppress_timeout_error);
+		return null;
 	}
 
 	protected function throw_last_retryable_exception_if_fail_closed(bool $suppress_timeout_error): void
