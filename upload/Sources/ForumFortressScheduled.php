@@ -11,7 +11,7 @@ if (!defined('SMF'))
 
 use function ForumFortress\Smf\ffp_client;
 
-function ffp_scheduled_pre_load(): void
+function ffp_scheduled_pre_load()
 {
 	// Hook loads this file before SMF's scheduler resolves task callables.
 }

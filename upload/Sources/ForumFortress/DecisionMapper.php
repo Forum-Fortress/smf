@@ -4,7 +4,7 @@ namespace ForumFortress\Smf;
 
 class DecisionMapper
 {
-	public static function is_valid_response(?array $response): bool
+	public static function is_valid_response($response): bool
 	{
 		if (!is_array($response) || !isset($response['decision']))
 		{
@@ -14,12 +14,12 @@ class DecisionMapper
 		return in_array(strtolower(trim((string) $response['decision'])), ['allow', 'block'], true);
 	}
 
-	public static function is_above_limit(?array $response): bool
+	public static function is_above_limit($response): bool
 	{
 		return is_array($response) && strtoupper((string) ($response['status_code'] ?? '')) === 'ABOVELIMIT';
 	}
 
-	public static function decision(?array $response, bool $fail_open = false): string
+	public static function decision($response, bool $fail_open = false): string
 	{
 		if (!self::is_valid_response($response))
 		{

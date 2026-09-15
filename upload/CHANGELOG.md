@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.1 - 2026-09-16
+
+- Support SMF 2.1's PHP 7.1+ runtime range while preserving the shared API
+  routing behavior.
+- Fix SMF staff-bypass checks and load native moderation APIs in scheduled
+  actions.
+- Keep API keys on the original HTTPS host and use SMF's canonical forum URL
+  instead of the request Host header for bootstrap identity.
+
 ## 1.1.0 - 2026-09-11
 
 - Replace health and endpoint-catalogue routing with deterministic GeoDNS

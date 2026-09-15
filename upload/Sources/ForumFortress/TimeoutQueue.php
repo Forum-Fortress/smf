@@ -14,24 +14,24 @@ use function trim;
 
 class TimeoutQueue
 {
-	public const TIMEOUT_TAG = 'FFTimeout';
-	public const SOURCE = 'ff_timeout';
-	public const PENDING_TTL_SECONDS = 604800;
-	public const MAX_PENDING_ENTRIES = 100;
-	public const MAX_PENDING_BYTES = 262144;
-	public const MESSAGE_META_TTL_SECONDS = 604800;
-	public const MAX_MESSAGE_META_ENTRIES = 200;
-	public const MAX_MESSAGE_META_BYTES = 524288;
-	public const MAX_STRING_LENGTH = 20000;
+	const TIMEOUT_TAG = 'FFTimeout';
+	const SOURCE = 'ff_timeout';
+	const PENDING_TTL_SECONDS = 604800;
+	const MAX_PENDING_ENTRIES = 100;
+	const MAX_PENDING_BYTES = 262144;
+	const MESSAGE_META_TTL_SECONDS = 604800;
+	const MAX_MESSAGE_META_ENTRIES = 200;
+	const MAX_MESSAGE_META_BYTES = 524288;
+	const MAX_STRING_LENGTH = 20000;
 
-	protected ApiClient $client;
+	protected $client;
 
 	public function __construct(ApiClient $client)
 	{
 		$this->client = $client;
 	}
 
-	public function enqueue(string $endpoint, array $check_payload, array $context = []): void
+	public function enqueue(string $endpoint, array $check_payload, array $context = [])
 	{
 		$pending = $this->load_pending();
 		$check_payload = $this->sanitise_check_payload($check_payload);
@@ -97,13 +97,13 @@ class TimeoutQueue
 		return $items;
 	}
 
-	public function find_entry(string $remote_type, string $remote_id): ?array
+	public function find_entry(string $remote_type, string $remote_id)
 	{
 		$entry = $this->load_pending()[$remote_type . ':' . $remote_id] ?? null;
 		return is_array($entry) ? $entry : null;
 	}
 
-	public function retire(string $remote_type, string $remote_id): void
+	public function retire(string $remote_type, string $remote_id)
 	{
 		$pending = $this->load_pending();
 		$key = $remote_type . ':' . $remote_id;
@@ -123,7 +123,7 @@ class TimeoutQueue
 		}
 	}
 
-	public function message_meta(int $msg_id): ?array
+	public function message_meta(int $msg_id)
 	{
 		if ($msg_id <= 0)
 		{
@@ -134,7 +134,7 @@ class TimeoutQueue
 		return is_array($meta) ? $meta : null;
 	}
 
-	public function attach_message_meta(int $msg_id, string $endpoint, array $check_payload): void
+	public function attach_message_meta(int $msg_id, string $endpoint, array $check_payload)
 	{
 		if ($msg_id <= 0)
 		{
@@ -207,7 +207,7 @@ class TimeoutQueue
 		return $pruned;
 	}
 
-	protected function save_pending(array $pending): void
+	protected function save_pending(array $pending)
 	{
 		$pending = $this->prune_pending($pending);
 		$json = $this->encode_json($pending);
@@ -237,7 +237,7 @@ class TimeoutQueue
 		return $pruned;
 	}
 
-	protected function save_message_meta(array $meta): void
+	protected function save_message_meta(array $meta)
 	{
 		$json = $this->encode_json($this->prune_message_meta($meta));
 		updateSettings(['ffprotect_timeout_post_meta' => $json]);
@@ -245,7 +245,7 @@ class TimeoutQueue
 		$modSettings['ffprotect_timeout_post_meta'] = $json;
 	}
 
-	protected function retire_message_meta(int $msg_id): void
+	protected function retire_message_meta(int $msg_id)
 	{
 		$meta = $this->load_message_meta();
 		if (array_key_exists((string) $msg_id, $meta))

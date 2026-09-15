@@ -30,7 +30,7 @@ $GLOBALS['ffp_pending_register_decision'] = null;
 /** @var array<string, mixed>|null */
 $GLOBALS['ffp_pending_post_timeout'] = null;
 
-function ffp_load_language(): void
+function ffp_load_language()
 {
 	loadLanguage('ForumFortressProtect');
 }
@@ -40,7 +40,7 @@ function ffp_load_language(): void
  * policy. Returning null here lets the same code path handle both exceptions
  * and ordinary unsuccessful responses without leaking an API error to SMF.
  */
-function ffp_run_check(ApiClient $client, string $endpoint, array $payload): ?array
+function ffp_run_check(ApiClient $client, string $endpoint, array $payload)
 {
 	try
 	{
@@ -52,7 +52,7 @@ function ffp_run_check(ApiClient $client, string $endpoint, array $payload): ?ar
 	}
 }
 
-function ffp_integrate_register_check(&$regOptions, &$reg_errors): void
+function ffp_integrate_register_check(&$regOptions, &$reg_errors)
 {
 	$client = ffp_client();
 	if (!$client->is_enabled() || $client->protection_checks_bypassed())
@@ -103,7 +103,7 @@ function ffp_integrate_register_check(&$regOptions, &$reg_errors): void
 	}
 }
 
-function ffp_integrate_register_after($regOptions, $memberID): void
+function ffp_integrate_register_after($regOptions, $memberID)
 {
 	$client = ffp_client();
 	if (!$client->is_enabled())
@@ -132,7 +132,7 @@ function ffp_integrate_register_after($regOptions, $memberID): void
 	$GLOBALS['ffp_pending_register_decision'] = null;
 }
 
-function ffp_integrate_post2_pre(&$post_errors): void
+function ffp_integrate_post2_pre(&$post_errors)
 {
 	global $user_info;
 	global $smcFunc;
@@ -228,7 +228,7 @@ function ffp_integrate_post2_pre(&$post_errors): void
 	}
 }
 
-function ffp_integrate_after_create_post($msgOptions, $topicOptions, $posterOptions, $message_columns, $message_parameters): void
+function ffp_integrate_after_create_post($msgOptions, $topicOptions, $posterOptions, $message_columns, $message_parameters)
 {
 	global $user_info;
 	$client = ffp_client();
@@ -266,7 +266,7 @@ function ffp_integrate_after_create_post($msgOptions, $topicOptions, $posterOpti
 	}
 }
 
-function ffp_integrate_profile_save(&$profile_vars, &$post_errors, $memID, $cur_profile, $current_area): void
+function ffp_integrate_profile_save(&$profile_vars, &$post_errors, $memID, $cur_profile, $current_area)
 {
 	global $user_info;
 	$client = ffp_client();
@@ -332,7 +332,7 @@ function ffp_integrate_profile_save(&$profile_vars, &$post_errors, $memID, $cur_
 	ffp_apply_content_decision($response, $post_errors, $client);
 }
 
-function ffp_apply_content_decision(?array $response, array &$post_errors, ApiClient $client): void
+function ffp_apply_content_decision($response, array &$post_errors, ApiClient $client)
 {
 	if (DecisionMapper::is_above_limit($response) && !$client->fail_open())
 	{
@@ -346,7 +346,7 @@ function ffp_apply_content_decision(?array $response, array &$post_errors, ApiCl
 	}
 }
 
-function ffp_integrate_after_approve_posts($approve, $msgs, $topic_changes, $member_post_changes): void
+function ffp_integrate_after_approve_posts($approve, $msgs, $topic_changes, $member_post_changes)
 {
 	$client = ffp_client();
 	if (!$client->is_enabled() || !$approve || !$client->send_ham_enabled())
@@ -382,7 +382,7 @@ function ffp_integrate_after_approve_posts($approve, $msgs, $topic_changes, $mem
 	$smcFunc['db_free_result']($request);
 }
 
-function ffp_integrate_modify_modifications(&$subActions): void
+function ffp_integrate_modify_modifications(&$subActions)
 {
 	global $context;
 
@@ -394,7 +394,7 @@ function ffp_integrate_modify_modifications(&$subActions): void
 	}
 }
 
-function ffp_integrate_admin_areas(&$menuData): void
+function ffp_integrate_admin_areas(&$menuData)
 {
 	global $txt;
 

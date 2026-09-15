@@ -14,8 +14,8 @@ use function strtolower;
 
 class ModerationBridge
 {
-	protected ApiClient $client;
-	protected bool $system_execution = false;
+	protected $client;
+	protected $system_execution = false;
 
 	public function __construct(ApiClient $client)
 	{
@@ -89,11 +89,6 @@ class ModerationBridge
 
 	public function execute_actions(array $actions): array
 	{
-		global $sourcedir;
-		require_once $sourcedir . '/Subs-Post.php';
-		require_once $sourcedir . '/Subs-Members.php';
-		require_once $sourcedir . '/RemoveTopic.php';
-
 		$results = [];
 		$previous_system_execution = $this->system_execution;
 		$this->system_execution = false;
@@ -120,7 +115,7 @@ class ModerationBridge
 		$this->system_execution = true;
 		try
 		{
-			return $this->with_system_actor(fn(): array => $this->execute_actions_with_current_actor($actions));
+			return $this->with_system_actor(function () use ($actions) { return $this->execute_actions_with_current_actor($actions); });
 		}
 		finally
 		{
@@ -130,6 +125,12 @@ class ModerationBridge
 
 	protected function execute_actions_with_current_actor(array $actions): array
 	{
+		// Both the interactive and cron entry points need SMF's moderation APIs.
+		global $sourcedir;
+		require_once $sourcedir . '/Subs-Post.php';
+		require_once $sourcedir . '/Subs-Members.php';
+		require_once $sourcedir . '/RemoveTopic.php';
+
 		$results = [];
 		foreach ($actions as $action)
 		{
@@ -189,7 +190,7 @@ class ModerationBridge
 		return $results;
 	}
 
-	public function apply_queue_notes(array $notes): void
+	public function apply_queue_notes(array $notes)
 	{
 		global $smcFunc;
 		foreach ($notes as $note)
@@ -219,7 +220,7 @@ class ModerationBridge
 		}
 	}
 
-	protected function map_message_row(array $row, string $scripturl): ?array
+	protected function map_message_row(array $row, string $scripturl)
 	{
 		$post_id = (int) ($row['id_msg'] ?? 0);
 		if ($post_id <= 0)

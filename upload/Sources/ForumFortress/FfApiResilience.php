@@ -5,7 +5,8 @@
  *
  * Shared Forum Fortress API resilience helpers (bootstrap and deterministic fallback).
  *
- * Copied into XenForo, phpBB, Invision, and SMF plugin trees on release; keep copies in sync.
+ * SMF 2.1 PHP 7.1-compatible syntax variant of the cross-platform helper.
+ * Keep its observable routing contract in sync with the other plugin trees.
  *
  * Manual verification matrix (when changing this file):
  * - global routing: api.ffapi.net then fortress.ffapi.net
@@ -18,29 +19,29 @@ declare(strict_types=1);
 
 final class FfApiResilience
 {
-	public const OFFLINE_TOKEN_PREFIX = 'ff_ob_';
-	public const DEFAULT_API_REGION = 'global';
-	public const GLOBAL_API_BASE_URL = 'https://api.ffapi.net';
-	public const GLOBAL_FALLBACK_BASE_URL = 'https://fortress.ffapi.net';
-	private const API_REGION_BASE_URLS = [
+	const OFFLINE_TOKEN_PREFIX = 'ff_ob_';
+	const DEFAULT_API_REGION = 'global';
+	const GLOBAL_API_BASE_URL = 'https://api.ffapi.net';
+	const GLOBAL_FALLBACK_BASE_URL = 'https://fortress.ffapi.net';
+	const API_REGION_BASE_URLS = [
 		'global' => self::GLOBAL_API_BASE_URL,
 		'uk' => 'https://api-uk.ffapi.net',
 		'eu' => 'https://api-eu.ffapi.net',
 		'us' => 'https://api-us.ffapi.net',
 	];
 
-	public static function normaliseApiRegion(?string $region): string
+	public static function normaliseApiRegion($region): string
 	{
 		$value = strtolower(trim((string) $region));
 		return array_key_exists($value, self::API_REGION_BASE_URLS) ? $value : self::DEFAULT_API_REGION;
 	}
 
-	public static function apiBaseUrlForRegion(?string $region): string
+	public static function apiBaseUrlForRegion($region): string
 	{
 		return self::API_REGION_BASE_URLS[self::normaliseApiRegion($region)];
 	}
 
-	public static function apiRegionFromLegacyBaseUrl(?string $baseUrl): string
+	public static function apiRegionFromLegacyBaseUrl($baseUrl): string
 	{
 		$normalised = strtolower(self::normaliseBaseUrl((string) $baseUrl));
 		foreach (self::API_REGION_BASE_URLS as $region => $url)
@@ -54,7 +55,7 @@ final class FfApiResilience
 	}
 
 	/** @return list<string> */
-	public static function regionLockedCheckBases(?string $region, bool $allowGlobalFallback): array
+	public static function regionLockedCheckBases($region, bool $allowGlobalFallback): array
 	{
 		$region = self::normaliseApiRegion($region);
 		$primary = self::apiBaseUrlForRegion($region);
@@ -67,26 +68,26 @@ final class FfApiResilience
 			: [$primary];
 	}
 
-	public static function apiRegionIsLocked(?string $region): bool
+	public static function apiRegionIsLocked($region): bool
 	{
 		return self::normaliseApiRegion($region) !== self::DEFAULT_API_REGION;
 	}
 
-	public static function isLocalDevelopmentBaseUrl(?string $baseUrl): bool
+	public static function isLocalDevelopmentBaseUrl($baseUrl): bool
 	{
 		$host = strtolower((string) parse_url(self::normaliseBaseUrl((string) $baseUrl), PHP_URL_HOST));
 		return in_array($host, ['localhost', '127.0.0.1', '::1'], true);
 	}
 
 	/** Default TTL before GET /v1/node-endpoints is refreshed (4 hours). */
-	public const ENDPOINT_CATALOG_TTL_SECONDS = 14400;
+	const ENDPOINT_CATALOG_TTL_SECONDS = 14400;
 
 	/** Back off catalog discovery after failure to avoid hammering control. */
-	public const ENDPOINT_CATALOG_REFRESH_BACKOFF_SECONDS = 300;
+	const ENDPOINT_CATALOG_REFRESH_BACKOFF_SECONDS = 300;
 
-	public const ENDPOINT_CATALOG_FAILED_AT_KEY = 'catalog_refresh_failed_at';
-	public const RUNTIME_CHECK_ENDPOINT_TIMEOUT_SECONDS = 1;
-	public const RUNTIME_CHECK_TOTAL_BUDGET_SECONDS = 5;
+	const ENDPOINT_CATALOG_FAILED_AT_KEY = 'catalog_refresh_failed_at';
+	const RUNTIME_CHECK_ENDPOINT_TIMEOUT_SECONDS = 1;
+	const RUNTIME_CHECK_TOTAL_BUDGET_SECONDS = 5;
 
 	public static function normaliseBaseUrl(string $value): string
 	{
@@ -107,7 +108,7 @@ final class FfApiResilience
 	{
 		$domain = strtolower(trim($domain));
 		$domain = rtrim($domain, '.');
-		if (str_starts_with($domain, 'www.'))
+		if (self::startsWith($domain, 'www.'))
 		{
 			$domain = substr($domain, 4);
 		}
@@ -115,7 +116,7 @@ final class FfApiResilience
 		return $domain;
 	}
 
-	public static function isOfflineBootstrapKey(?string $apiKey, ?string $keyType = null): bool
+	public static function isOfflineBootstrapKey($apiKey, $keyType = null): bool
 	{
 		if ($keyType === 'offline_bootstrap')
 		{
@@ -123,14 +124,14 @@ final class FfApiResilience
 		}
 		$apiKey = trim((string) $apiKey);
 
-		return $apiKey !== '' && str_starts_with($apiKey, self::OFFLINE_TOKEN_PREFIX);
+		return $apiKey !== '' && self::startsWith($apiKey, self::OFFLINE_TOKEN_PREFIX);
 	}
 
 	/**
 	 * @param array<string, mixed> $bootstrapResponse
 	 * @param array<string, mixed> $state
 	 */
-	public static function applyOfflineBootstrapRouting(array $bootstrapResponse, array &$state, string $usedBase): void
+	public static function applyOfflineBootstrapRouting(array $bootstrapResponse, array &$state, string $usedBase)
 	{
 		$keyType = isset($bootstrapResponse['key_type']) ? (string) $bootstrapResponse['key_type'] : '';
 		$apiKey = isset($bootstrapResponse['api_key']) ? (string) $bootstrapResponse['api_key'] : '';
@@ -171,7 +172,7 @@ final class FfApiResilience
 		$fallback = $bootstrapResponse['fallback_bootstrap_endpoints'] ?? null;
 		$state['fallback_bootstrap_endpoints'] = is_array($fallback)
 			? array_values(array_filter(array_map(
-				static fn ($u) => self::normaliseBaseUrl((string) $u),
+				static function ($u) { return self::normaliseBaseUrl((string) $u); },
 				$fallback
 			)))
 			: [];
@@ -226,7 +227,7 @@ final class FfApiResilience
 	/**
 	 * @param array<string, mixed>|null $decodedBody
 	 */
-	public static function isNodeMismatchResponse(?array $decodedBody): bool
+	public static function isNodeMismatchResponse($decodedBody): bool
 	{
 		if (!is_array($decodedBody))
 		{
@@ -246,7 +247,7 @@ final class FfApiResilience
 		return in_array('node_mismatch', $candidates, true);
 	}
 
-	public static function normaliseTrafficTier(mixed $raw): int
+	public static function normaliseTrafficTier($raw): int
 	{
 		if (!is_int($raw) && !is_float($raw) && !is_string($raw))
 		{
@@ -411,7 +412,7 @@ final class FfApiResilience
 	 *
 	 * @param array<string, mixed> $state Plugin endpoint state blob
 	 */
-	public static function isEndpointCatalogStale(array $state, ?int $ttlSeconds = null): bool
+	public static function isEndpointCatalogStale(array $state, $ttlSeconds = null): bool
 	{
 		$ttl = $ttlSeconds ?? self::ENDPOINT_CATALOG_TTL_SECONDS;
 		$fetchedAt = (int) ($state['catalog_fetched_at'] ?? 0);
@@ -427,7 +428,7 @@ final class FfApiResilience
 	/**
 	 * @param array<string, mixed> $state
 	 */
-	public static function shouldBackoffEndpointCatalogRefresh(array $state, ?int $now = null): bool
+	public static function shouldBackoffEndpointCatalogRefresh(array $state, $now = null): bool
 	{
 		$now = $now ?? time();
 		$failedAt = (int) ($state[self::ENDPOINT_CATALOG_FAILED_AT_KEY] ?? 0);
@@ -442,7 +443,7 @@ final class FfApiResilience
 	/**
 	 * @param array<string, mixed> $state
 	 */
-	public static function noteEndpointCatalogRefreshFailure(array &$state, ?int $now = null): void
+	public static function noteEndpointCatalogRefreshFailure(array &$state, $now = null)
 	{
 		$state[self::ENDPOINT_CATALOG_FAILED_AT_KEY] = $now ?? time();
 	}
@@ -450,7 +451,7 @@ final class FfApiResilience
 	/**
 	 * @param array<string, mixed> $state
 	 */
-	public static function noteEndpointCatalogRefreshSuccess(array &$state): void
+	public static function noteEndpointCatalogRefreshSuccess(array &$state)
 	{
 		unset($state[self::ENDPOINT_CATALOG_FAILED_AT_KEY]);
 	}
@@ -458,7 +459,7 @@ final class FfApiResilience
 	/**
 	 * After successful check-in / site sync, optionally refresh discovery catalog when stale.
 	 */
-	public static function shouldRefreshEndpointCatalogOnCheckIn(?string $requestPath): bool
+	public static function shouldRefreshEndpointCatalogOnCheckIn($requestPath): bool
 	{
 		if (!is_string($requestPath) || $requestPath === '')
 		{
@@ -474,7 +475,7 @@ final class FfApiResilience
 			] as $prefix
 		)
 		{
-			if ($requestPath === $prefix || str_starts_with($requestPath, $prefix . '/'))
+			if ($requestPath === $prefix || self::startsWith($requestPath, $prefix . '/'))
 			{
 				return true;
 			}
@@ -499,7 +500,7 @@ final class FfApiResilience
 		);
 	}
 
-	public static function isStrictSupernodeSyncPath(?string $requestPath): bool
+	public static function isStrictSupernodeSyncPath($requestPath): bool
 	{
 		if (!is_string($requestPath) || $requestPath === '')
 		{
@@ -507,7 +508,7 @@ final class FfApiResilience
 		}
 		foreach (['/v1/moderation-queue/', '/v1/moderation-actions/'] as $prefix)
 		{
-			if (str_starts_with($requestPath, $prefix))
+			if (self::startsWith($requestPath, $prefix))
 			{
 				return true;
 			}
@@ -519,7 +520,7 @@ final class FfApiResilience
 	/**
 	 * Read-only plugin calls that should prefer healthy edges over control/api when reachable.
 	 */
-	public static function isEdgePreferredReadPath(?string $requestPath): bool
+	public static function isEdgePreferredReadPath($requestPath): bool
 	{
 		if (!is_string($requestPath) || $requestPath === '')
 		{
@@ -541,7 +542,7 @@ final class FfApiResilience
 		return false;
 	}
 
-	public static function shouldFailoverOnIntermittentStatus(int $status, ?string $requestPath): bool
+	public static function shouldFailoverOnIntermittentStatus(int $status, $requestPath): bool
 	{
 		if (!in_array($status, [401, 404], true))
 		{
@@ -566,7 +567,7 @@ final class FfApiResilience
 	/**
 	 * Background site sync and moderation should not fan out across edge hostnames.
 	 */
-	public static function isControlPlanePreferredPath(?string $requestPath): bool
+	public static function isControlPlanePreferredPath($requestPath): bool
 	{
 		if (!is_string($requestPath) || $requestPath === '')
 		{
@@ -592,21 +593,21 @@ final class FfApiResilience
 	}
 
 	/** Minimum HTTP timeout for contact-form checks (slow enrichment path). */
-	public const CONTACT_PAGE_MIN_TIMEOUT_SECONDS = 6;
+	const CONTACT_PAGE_MIN_TIMEOUT_SECONDS = 6;
 
 	/** Maximum HTTP timeout for contact-form checks. */
-	public const CONTACT_PAGE_MAX_TIMEOUT_SECONDS = 12;
+	const CONTACT_PAGE_MAX_TIMEOUT_SECONDS = 12;
 
 	/** At most one regional edge plus api.ffapi.net per contact_page attempt cycle. */
-	public const CONTACT_PAGE_FAILOVER_MAX_BASES = 2;
+	const CONTACT_PAGE_FAILOVER_MAX_BASES = 2;
 
 	/** Throttle repeated timeout warnings in forum error logs. */
-	public const API_TIMEOUT_LOG_THROTTLE_SECONDS = 300;
+	const API_TIMEOUT_LOG_THROTTLE_SECONDS = 300;
 
 	/** Log transient background failures only after this many consecutive errors. */
-	public const CONSECUTIVE_TRANSIENT_LOG_THRESHOLD = 3;
+	const CONSECUTIVE_TRANSIENT_LOG_THRESHOLD = 3;
 
-	public static function isContactPageCheckPath(?string $requestPath): bool
+	public static function isContactPageCheckPath($requestPath): bool
 	{
 		if (!is_string($requestPath) || $requestPath === '')
 		{
@@ -614,7 +615,7 @@ final class FfApiResilience
 		}
 
 		return $requestPath === '/v1/check/contact_page'
-			|| str_starts_with($requestPath, '/v1/check/contact_page');
+			|| self::startsWith($requestPath, '/v1/check/contact_page');
 	}
 
 	public static function isContactPageUnifiedCheckPayload(array $payload): bool
@@ -622,7 +623,7 @@ final class FfApiResilience
 		return strtolower(trim((string) ($payload['check_endpoint'] ?? ''))) === 'contact_page';
 	}
 
-	public static function shouldUseContactPageRouting(?string $requestPath, array $payload): bool
+	public static function shouldUseContactPageRouting($requestPath, array $payload): bool
 	{
 		return self::isContactPageCheckPath($requestPath)
 			|| ($requestPath === '/v1/check' && self::isContactPageUnifiedCheckPayload($payload));
@@ -639,12 +640,12 @@ final class FfApiResilience
 		);
 	}
 
-	public static function shouldSuppressCheckTimeoutException(?string $requestPath): bool
+	public static function shouldSuppressCheckTimeoutException($requestPath): bool
 	{
 		return self::isContactPageCheckPath($requestPath);
 	}
 
-	public static function isTransientNetworkMessage(?string $message): bool
+	public static function isTransientNetworkMessage($message): bool
 	{
 		if (!is_string($message) || $message === '')
 		{
@@ -652,15 +653,15 @@ final class FfApiResilience
 		}
 		$lower = strtolower($message);
 
-		return str_contains($lower, 'curl error 28')
-			|| str_contains($lower, 'timed out')
-			|| str_contains($lower, 'timeout')
-			|| str_contains($lower, 'curl error 6')
-			|| str_contains($lower, 'curl error 7')
-			|| str_contains($lower, 'could not resolve host')
-			|| str_contains($lower, 'failed to connect')
-			|| str_contains($lower, 'connection refused')
-			|| str_contains($lower, 'network is unreachable');
+		return self::contains($lower, 'curl error 28')
+			|| self::contains($lower, 'timed out')
+			|| self::contains($lower, 'timeout')
+			|| self::contains($lower, 'curl error 6')
+			|| self::contains($lower, 'curl error 7')
+			|| self::contains($lower, 'could not resolve host')
+			|| self::contains($lower, 'failed to connect')
+			|| self::contains($lower, 'connection refused')
+			|| self::contains($lower, 'network is unreachable');
 	}
 
 	/**
@@ -703,7 +704,7 @@ final class FfApiResilience
 		array &$state,
 		string $throttleKey,
 		int $intervalSeconds = self::API_TIMEOUT_LOG_THROTTLE_SECONDS,
-		?int $now = null
+		$now = null
 	): bool {
 		$now = $now ?? time();
 		$key = 'log_throttle_' . preg_replace('/[^a-z0-9_]+/i', '_', strtolower($throttleKey));
@@ -744,5 +745,16 @@ final class FfApiResilience
 		}
 
 		return self::shouldLogThrottledApiFailure($state, $failureKey);
+	}
+
+	// PHP 7.0-compatible equivalents of the PHP 8 string predicates.
+	private static function startsWith(string $haystack, string $needle): bool
+	{
+		return $needle === '' || strpos($haystack, $needle) === 0;
+	}
+
+	private static function contains(string $haystack, string $needle): bool
+	{
+		return $needle === '' || strpos($haystack, $needle) !== false;
 	}
 }

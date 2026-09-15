@@ -4,7 +4,7 @@
  * @template Admin_ForumFortress
  */
 
-function template_admin_forumfortress(): void
+function template_admin_forumfortress()
 {
 	global $context, $txt;
 

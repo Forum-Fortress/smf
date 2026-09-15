@@ -36,35 +36,35 @@ use function trim;
 
 class ApiClient
 {
-	public const PLATFORM = 'smf';
-	public const PLUGIN_VERSION = '1.1.0';
-	public const CONTROL_PLANE_BASE_URL = 'https://fortress.ffapi.net';
-	protected const HOURLY_SYNC_MIN_INTERVAL = 540;
-	protected const STANDARD_HEARTBEAT_INTERVAL_SECONDS = 3600;
-	protected const PRO_HEARTBEAT_INTERVAL_SECONDS = 600;
-	protected const ENDPOINT_REFRESH_REQUEST_MAX_DELAY_SECONDS = 60;
-	protected const CONNECTION_TEST_TIMEOUT_SECONDS = 2;
-	protected const CONNECTION_TEST_TOTAL_BUDGET_SECONDS = 5;
-	protected const PLAN_REFRESH_SECONDS = 86400;
-	protected const MODERATION_SYNC_SECONDS = 600;
+	const PLATFORM = 'smf';
+	const PLUGIN_VERSION = '1.1.1';
+	const CONTROL_PLANE_BASE_URL = 'https://fortress.ffapi.net';
+	const HOURLY_SYNC_MIN_INTERVAL = 540;
+	const STANDARD_HEARTBEAT_INTERVAL_SECONDS = 3600;
+	const PRO_HEARTBEAT_INTERVAL_SECONDS = 600;
+	const ENDPOINT_REFRESH_REQUEST_MAX_DELAY_SECONDS = 60;
+	const CONNECTION_TEST_TIMEOUT_SECONDS = 2;
+	const CONNECTION_TEST_TOTAL_BUDGET_SECONDS = 5;
+	const PLAN_REFRESH_SECONDS = 86400;
+	const MODERATION_SYNC_SECONDS = 600;
 
-	protected static bool $moderation_sync_in_progress = false;
-	protected static int $last_moderation_sync_at = 0;
+	protected static $moderation_sync_in_progress = false;
+	protected static $last_moderation_sync_at = 0;
 
-	protected SmfConfig $config;
-	protected SmfUser $user;
-	protected SmfAuth $auth;
-	protected SmfRequest $request;
-	protected string $root_path;
-	protected string $php_ext;
-	protected ModerationBridge $moderation_bridge;
-	protected TimeoutQueue $timeout_queue;
+	protected $config;
+	protected $user;
+	protected $auth;
+	protected $request;
+	protected $root_path;
+	protected $php_ext;
+	protected $moderation_bridge;
+	protected $timeout_queue;
 
 	/** @var string|null Last transport/HTTP/parse error for ACP diagnostics */
-	protected ?string $last_request_error = null;
-	protected ?\Throwable $last_retryable_exception = null;
+	protected $last_request_error = null;
+	protected $last_retryable_exception = null;
 
-	protected bool $last_check_had_timeout = false;
+	protected $last_check_had_timeout = false;
 
 	public function __construct(
 		SmfConfig $config,
@@ -73,8 +73,8 @@ class ApiClient
 		SmfRequest $request,
 		string $root_path,
 		string $php_ext,
-		?ModerationBridge $moderation_bridge = null,
-		?TimeoutQueue $timeout_queue = null
+		$moderation_bridge = null,
+		$timeout_queue = null
 	) {
 		$this->config = $config;
 		$this->user = $user;
@@ -96,7 +96,7 @@ class ApiClient
 		return $this->last_check_had_timeout;
 	}
 
-	public function queue_timeout_recovery(string $endpoint, array $payload, array $context = []): void
+	public function queue_timeout_recovery(string $endpoint, array $payload, array $context = [])
 	{
 		$this->timeout_queue->enqueue($endpoint, $payload, $context);
 	}
@@ -111,7 +111,7 @@ class ApiClient
 		return (bool) ($this->config['ffprotect_fail_open'] ?? true);
 	}
 
-	public function bootstrap_if_needed(): ?array
+	public function bootstrap_if_needed()
 	{
 		if (!$this->is_enabled())
 		{
@@ -172,7 +172,7 @@ class ApiClient
 		return $response;
 	}
 
-	public function check(string $endpoint, array $payload): ?array
+	public function check(string $endpoint, array $payload)
 	{
 		if (!$this->is_enabled())
 		{
@@ -216,7 +216,7 @@ class ApiClient
 		return $response;
 	}
 
-	public function report(string $endpoint, array $payload): ?array
+	public function report(string $endpoint, array $payload)
 	{
 		if (!$this->is_enabled())
 		{
@@ -232,12 +232,12 @@ class ApiClient
 		return $response;
 	}
 
-	public function health(?int $timeoutOverride = null): ?array
+	public function health($timeoutOverride = null)
 	{
 		return $this->site_ping();
 	}
 
-	public function capabilities(?int $timeoutOverride = null): ?array
+	public function capabilities($timeoutOverride = null)
 	{
 		if (!$this->is_enabled())
 		{
@@ -248,7 +248,7 @@ class ApiClient
 		return $this->request_json_control_plane('GET', '/v1/capabilities', [], $timeoutOverride ?? self::CONNECTION_TEST_TIMEOUT_SECONDS);
 	}
 
-	public function site_status(): ?array
+	public function site_status()
 	{
 		if (!$this->is_enabled())
 		{
@@ -274,7 +274,7 @@ class ApiClient
 		return $response;
 	}
 
-	public function forum_stats(): ?array
+	public function forum_stats()
 	{
 		if (!$this->is_enabled())
 		{
@@ -295,7 +295,7 @@ class ApiClient
 		]);
 	}
 
-	public function plugin_release(): ?array
+	public function plugin_release()
 	{
 		if (!$this->is_enabled())
 		{
@@ -308,7 +308,7 @@ class ApiClient
 		]);
 	}
 
-	public function register_site(string $email): ?array
+	public function register_site(string $email)
 	{
 		if (!$this->is_enabled())
 		{
@@ -350,7 +350,7 @@ class ApiClient
 		return $response;
 	}
 
-	public function portal_launch(): ?array
+	public function portal_launch()
 	{
 		if (!$this->is_enabled())
 		{
@@ -413,7 +413,7 @@ class ApiClient
 	/**
 	 * Check-in: updates forum row (domain, platform, phpBB + plugin versions, last_seen).
 	 */
-	public function site_ping(): ?array
+	public function site_ping()
 	{
 		if (!$this->is_enabled())
 		{
@@ -477,12 +477,9 @@ class ApiClient
 
 		if ($this->bypass_administrators_enabled())
 		{
-			if (!defined('USER_FOUNDER'))
-			{
-				include $this->root_path . 'includes/constants.' . $this->php_ext;
-			}
-
-			if ((int) ($this->user->data['user_type'] ?? 0) === USER_FOUNDER || $this->auth->acl_get('a_'))
+			// SMF has no phpBB USER_FOUNDER constant or includes/constants.php.
+			// The admin_forum permission is the native SMF authority check.
+			if ($this->auth->acl_get('a_'))
 			{
 				return true;
 			}
@@ -496,7 +493,7 @@ class ApiClient
 		return false;
 	}
 
-	public function activate_attack_mode(): ?array
+	public function activate_attack_mode()
 	{
 		if (!$this->is_enabled())
 		{
@@ -520,7 +517,7 @@ class ApiClient
 		return $this->assert_attack_mode_response($response, true);
 	}
 
-	public function deactivate_attack_mode(): ?array
+	public function deactivate_attack_mode()
 	{
 		if (!$this->is_enabled())
 		{
@@ -543,7 +540,7 @@ class ApiClient
 		return $this->assert_attack_mode_response($response, false);
 	}
 
-	protected function assert_attack_mode_response(?array $response, bool $enabled): array
+	protected function assert_attack_mode_response($response, bool $enabled): array
 	{
 		$actual = null;
 		if (is_array($response) && array_key_exists('attack_mode_active', $response))
@@ -574,7 +571,7 @@ class ApiClient
 		return $response;
 	}
 
-	public function hourly_sync(): void
+	public function hourly_sync()
 	{
 		if (!$this->is_enabled())
 		{
@@ -644,7 +641,7 @@ class ApiClient
 		$this->config->set('ffprotect_cron_sync_last', time());
 	}
 
-	public function run_moderation_sync_cycle(bool $force = false, bool $system_execution = false): void
+	public function run_moderation_sync_cycle(bool $force = false, bool $system_execution = false)
 	{
 		if (!$this->is_enabled() || self::$moderation_sync_in_progress)
 		{
@@ -765,22 +762,31 @@ class ApiClient
 		return array_merge($defaults, $payload);
 	}
 
-	public function get_last_request_error(): ?string
+	public function get_last_request_error()
 	{
 		return $this->last_request_error;
 	}
 
-	public function clear_last_request_error(): void
+	public function clear_last_request_error()
 	{
 		$this->last_request_error = null;
 	}
 
 	public function get_domain(): string
 	{
+		global $boardurl;
 		$stored = trim((string) ($this->config['ffprotect_primary_domain'] ?? ''));
 		if ($stored !== '')
 		{
 			return self::normalize_domain($stored);
+		}
+
+		// SMF's configured URL is authoritative. Never bootstrap a site from
+		// the request Host header, which an unauthenticated caller controls.
+		$board_host = parse_url((string) ($boardurl ?? ''), PHP_URL_HOST);
+		if (is_string($board_host) && $board_host !== '')
+		{
+			return self::normalize_domain($board_host);
 		}
 
 		$server_name = trim((string) ($this->config['server_name'] ?? ''));
@@ -789,7 +795,7 @@ class ApiClient
 			return self::normalize_domain($this->strip_host_port($server_name));
 		}
 
-		return self::normalize_domain($this->strip_host_port((string) $this->request->server('HTTP_HOST', '')));
+		return '';
 	}
 
 	protected function get_bootstrap_domain(): string
@@ -846,7 +852,7 @@ class ApiClient
 		return $this->php_ext;
 	}
 
-	protected function language_hint(string $value): ?string
+	protected function language_hint(string $value)
 	{
 		$raw = trim(str_replace('_', '-', $value));
 		if ($raw === '')
@@ -858,7 +864,7 @@ class ApiClient
 		return $lang !== '' ? $lang : null;
 	}
 
-	protected function timezone_name(): ?string
+	protected function timezone_name()
 	{
 		$tz = $this->user->timezone ?? null;
 		if ($tz && method_exists($tz, 'getName'))
@@ -872,7 +878,7 @@ class ApiClient
 		return null;
 	}
 
-	protected function timezone_offset_minutes(): ?int
+	protected function timezone_offset_minutes()
 	{
 		$tz = $this->user->timezone ?? null;
 		if (!$tz || !method_exists($tz, 'getOffset'))
@@ -1012,7 +1018,7 @@ class ApiClient
 	}
 
 	/** @param array<string, mixed> $state */
-	protected function invalidate_endpoint_health_state(array &$state): void
+	protected function invalidate_endpoint_health_state(array &$state)
 	{
 		$state['last_health_at'] = 0;
 		$state['health_day'] = '';
@@ -1029,7 +1035,7 @@ class ApiClient
 		return true;
 	}
 
-	public function refresh_endpoint_catalog_if_stale(): void
+	public function refresh_endpoint_catalog_if_stale()
 	{
 		if (!$this->is_enabled() || $this->get_manual_base_url() === '')
 		{
@@ -1045,7 +1051,7 @@ class ApiClient
 		}
 	}
 
-	protected function maybe_refresh_endpoint_catalog_after_check_in(string $request_path): void
+	protected function maybe_refresh_endpoint_catalog_after_check_in(string $request_path)
 	{
 		if (!\FfApiResilience::shouldRefreshEndpointCatalogOnCheckIn($request_path))
 		{
@@ -1055,14 +1061,14 @@ class ApiClient
 		$this->refresh_endpoint_catalog_if_stale();
 	}
 
-	protected function is_catalog_backup_role(?string $role): bool
+	protected function is_catalog_backup_role($role): bool
 	{
 		$role = strtolower(trim((string) $role));
 
 		return in_array($role, ['backup', 'control-fallback', 'control'], true);
 	}
 
-	protected function is_catalog_backup_endpoint_url(string $base_url, ?string $role = null): bool
+	protected function is_catalog_backup_endpoint_url(string $base_url, $role = null): bool
 	{
 		if ($this->is_catalog_backup_role($role))
 		{
@@ -1087,7 +1093,7 @@ class ApiClient
 	}
 
 	/** Bootstrap, catalog, capabilities, plugin-release: control, hot api, then edges. */
-	protected function request_json_control_plane(string $method, string $path, array $payload): ?array
+	protected function request_json_control_plane(string $method, string $path, array $payload)
 	{
 		$this->last_request_error = null;
 		$bases = $this->control_plane_request_bases();
@@ -1129,7 +1135,7 @@ class ApiClient
 	}
 
 	/** @param array<string, mixed> $state */
-	protected function save_endpoint_state(array $state): void
+	protected function save_endpoint_state(array $state)
 	{
 		ksort($state);
 		$encoded = json_encode($state, JSON_UNESCAPED_SLASHES);
@@ -1174,7 +1180,7 @@ class ApiClient
 		];
 	}
 
-	protected function hydrate_endpoint_state_if_stale(): void
+	protected function hydrate_endpoint_state_if_stale()
 	{
 		$state = $this->load_endpoint_state();
 		$needs_hydration = false;
@@ -1218,7 +1224,7 @@ class ApiClient
 		];
 	}
 
-	public function endpoint_health_display_label(string $endpoint_url, ?array $state = null): string
+	public function endpoint_health_display_label(string $endpoint_url, $state = null): string
 	{
 		$state = $state ?? $this->load_endpoint_state();
 		$endpoint_url = $this->normalise_base_url($endpoint_url);
@@ -1259,7 +1265,7 @@ class ApiClient
 		}
 		return $rows;
 	}
-	public function refresh_endpoint_catalog_and_health(bool $force = false): void
+	public function refresh_endpoint_catalog_and_health(bool $force = false)
 	{
 		if (!$this->is_enabled())
 		{
@@ -1300,7 +1306,7 @@ class ApiClient
 		);
 		$this->save_endpoint_state($state);
 	}
-	public function refresh_endpoints_before_connection_test(): void
+	public function refresh_endpoints_before_connection_test()
 	{
 		if (\FfApiResilience::apiRegionIsLocked($this->get_api_region()))
 		{
@@ -1384,6 +1390,7 @@ class ApiClient
 				'method' => 'GET',
 				'timeout' => $timeout,
 				'ignore_errors' => true,
+				'follow_location' => 0,
 				'header' => "Accept: application/json\r\n",
 			],
 		]);
@@ -1402,7 +1409,7 @@ class ApiClient
 	/**
 	 * @return list<string>
 	 */
-	protected function get_ordered_bases_for_requests(?string $request_path = null): array
+	protected function get_ordered_bases_for_requests($request_path = null): array
 	{
 		$primary = $this->get_manual_base_url();
 		if ($primary === '')
@@ -1442,7 +1449,7 @@ class ApiClient
 		];
 	}
 
-	public function request_json(string $method, string $path, array $payload): ?array
+	public function request_json(string $method, string $path, array $payload)
 	{
 		return $this->request_json_with_retry($method, $path, $payload, true, null, false);
 	}
@@ -1452,10 +1459,10 @@ class ApiClient
 		string $path,
 		array $payload,
 		bool $allow_rebootstrap,
-		?int $timeout_override,
+		$timeout_override,
 		bool $suppress_timeout_error,
 		bool $timeout_retry_attempted = false
-	): ?array {
+	) {
 		$this->last_request_error = null;
 		$this->last_retryable_exception = null;
 		$result = $this->request_json_with_retry_pass(
@@ -1475,7 +1482,7 @@ class ApiClient
 		return null;
 	}
 
-	protected function throw_last_retryable_exception_if_fail_closed(bool $suppress_timeout_error): void
+	protected function throw_last_retryable_exception_if_fail_closed(bool $suppress_timeout_error)
 	{
 		if (!$suppress_timeout_error && !(bool) ($this->config['ffprotect_fail_open'] ?? true) && $this->last_retryable_exception !== null)
 		{
@@ -1488,10 +1495,10 @@ class ApiClient
 		string $path,
 		array $payload,
 		bool $allow_rebootstrap,
-		?int $timeout_override,
+		$timeout_override,
 		bool $suppress_timeout_error,
 		bool $timeout_retry_attempted
-	): ?array {
+	) {
 		$bases = $this->get_ordered_bases_for_requests($path);
 		if (!$bases)
 		{
@@ -1603,10 +1610,10 @@ class ApiClient
 		string $path,
 		array $payload,
 		array $tried,
-		?int $timeout_override,
+		$timeout_override,
 		bool $suppress_timeout_error,
 		bool $timeout_retry_attempted
-	): ?array {
+	) {
 		if (strpos($path, '/v1/check') !== 0)
 		{
 			return null;
@@ -1655,7 +1662,7 @@ class ApiClient
 		array $payload,
 		string $base_url,
 		bool $allow_rebootstrap,
-		?int $timeout_override,
+		$timeout_override,
 		bool $suppress_timeout_error,
 		bool $timeout_retry_attempted = false
 	): array {
@@ -1682,6 +1689,8 @@ class ApiClient
 				'method' => $method,
 				'timeout' => $timeout,
 				'ignore_errors' => true,
+				// Never forward X-FF-Key to a Location supplied by a server.
+				'follow_location' => 0,
 				'header' => $headers,
 			],
 		];
@@ -1916,7 +1925,7 @@ class ApiClient
 			|| strpos($normalized, 'operation time') !== false;
 	}
 
-	protected function record_http_error(int $status, string $raw): void
+	protected function record_http_error(int $status, string $raw)
 	{
 		$snippet = trim($raw);
 		if (strlen($snippet) > 800)
@@ -1955,7 +1964,7 @@ class ApiClient
 			{
 				continue;
 			}
-			[$key, $value] = explode(':', $text, 2);
+			list($key, $value) = explode(':', $text, 2);
 			if (strtolower(trim($key)) === $needle)
 			{
 				return trim($value);
@@ -2010,14 +2019,14 @@ class ApiClient
 		return is_string($detail) ? strtolower(trim($detail)) : '';
 	}
 
-	protected function reset_identity(): void
+	protected function reset_identity()
 	{
 		$this->config->set('ffprotect_api_key', '');
 		$this->config->set('ffprotect_site_id', '');
 		$this->config->set('ffprotect_primary_domain', '');
 	}
 
-	public function persist_identity(array $response, string $used_base = ''): void
+	public function persist_identity(array $response, string $used_base = '')
 	{
 		$was_offline = $this->is_offline_api_key();
 		if (!empty($response['api_key']))
@@ -2098,7 +2107,7 @@ class ApiClient
 		return array_values(array_unique($filtered));
 	}
 
-	public static function extract_domain(string $value): ?string
+	public static function extract_domain(string $value)
 	{
 		$value = trim($value);
 		if ($value === '')
@@ -2121,7 +2130,7 @@ class ApiClient
 		return $normalized !== '' ? $normalized : null;
 	}
 
-	public static function email_domain(?string $email): ?string
+	public static function email_domain($email)
 	{
 		if (!$email || strpos($email, '@') === false)
 		{
@@ -2165,7 +2174,7 @@ class ApiClient
 		return $this->delete_rejected_users_enabled() ? 'spam_clean' : 'reject';
 	}
 
-	protected function refresh_plan_cache_if_stale(bool $force): void
+	protected function refresh_plan_cache_if_stale(bool $force)
 	{
 		$state = $this->load_endpoint_state();
 		$last = (int) ($state['plan_checked_at'] ?? 0);
@@ -2186,9 +2195,9 @@ class ApiClient
 		string $reason,
 		string $base_url,
 		string $path,
-		?int $status = null,
+		$status = null,
 		string $message = ''
-	): void {
+	) {
 		$failure = [
 			'at' => (int) time(),
 			'reason' => $reason,
@@ -2211,7 +2220,7 @@ class ApiClient
 		$this->save_endpoint_state($state);
 	}
 
-	protected function log(string $level, string $message, array $context = []): void
+	protected function log(string $level, string $message, array $context = [])
 	{
 		if (!(bool) ($this->config['ffprotect_debug_log'] ?? false) && $level === 'info')
 		{
@@ -2242,7 +2251,7 @@ class ApiClient
 		return $last <= 0 || (time() - $last) >= 86400;
 	}
 
-	protected function mark_daily_task_run(string $key): void
+	protected function mark_daily_task_run(string $key)
 	{
 		$state = $this->load_endpoint_state();
 		$state[$key] = (int) time();

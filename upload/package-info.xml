@@ -3,7 +3,7 @@
 	<id>forumfortress:protect</id>
 	<name>Forum Fortress Protect</name>
 	<type>modification</type>
-	<version>1.1.0</version>
+	<version>1.1.1</version>
 	<install for="2.1 - 2.1.99">
 		<require-file name="Sources/ForumFortressProtect.php" destination="$sourcedir" />
 		<require-file name="Sources/ForumFortressScheduled.php" destination="$sourcedir" />
@@ -154,6 +154,14 @@
 			]]></code>
 			<remove-file name="Themes/default/default/languages/ForumFortressProtect.english.php" />
 			<remove-file name="Themes/default/default/ForumFortressProtect.template.php" />
+		</upgrade>
+		<upgrade from="1.1.0" for="2.1 - 2.1.99">
+			<require-file name="Sources/ForumFortressProtect.php" destination="$sourcedir" />
+			<require-file name="Sources/ForumFortressScheduled.php" destination="$sourcedir" />
+			<require-file name="Sources/ManageForumFortress.php" destination="$sourcedir" />
+			<require-dir name="Sources/ForumFortress" destination="$sourcedir" />
+			<require-file name="Themes/default/languages/ForumFortressProtect.english.php" destination="$languagedir" />
+			<require-file name="Themes/default/ForumFortressProtect.template.php" destination="$themedir" />
 		</upgrade>
 	<uninstall for="2.1 - 2.1.99">
 		<hook hook="integrate_pre_load" function="ffp_scheduled_pre_load" file="$sourcedir/ForumFortressScheduled.php" reverse="true" />

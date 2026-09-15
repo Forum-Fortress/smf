@@ -14,7 +14,7 @@ require_once __DIR__ . '/ForumFortressProtect.php';
 use ForumFortress\Smf\ApiClient;
 use function ForumFortress\Smf\ffp_client;
 
-function ModifyForumFortressSettings(): void
+function ModifyForumFortressSettings()
 {
 	global $context, $txt, $scripturl, $modSettings, $sourcedir;
 

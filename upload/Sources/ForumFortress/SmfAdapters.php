@@ -13,23 +13,26 @@ class SmfConfig implements \ArrayAccess
 		return isset($modSettings[$offset]);
 	}
 
-	public function offsetGet($offset): mixed
+	#[\ReturnTypeWillChange]
+	public function offsetGet($offset)
 	{
 		global $modSettings;
 		return $modSettings[$offset] ?? null;
 	}
 
-	public function offsetSet($offset, $value): void
+	#[\ReturnTypeWillChange]
+	public function offsetSet($offset, $value)
 	{
 		$this->set((string) $offset, $value);
 	}
 
-	public function offsetUnset($offset): void
+	#[\ReturnTypeWillChange]
+	public function offsetUnset($offset)
 	{
 		$this->set((string) $offset, '');
 	}
 
-	public function set(string $key, mixed $value): void
+	public function set(string $key, $value)
 	{
 		updateSettings([$key => $value]);
 		global $modSettings;
@@ -40,8 +43,8 @@ class SmfConfig implements \ArrayAccess
 class SmfUser
 {
 	/** @var array<string, mixed> */
-	public array $data;
-	public string $ip;
+	public $data;
+	public $ip;
 
 	public function __construct()
 	{
@@ -83,7 +86,7 @@ class SmfRequest
 		return (string) ($_SERVER[$key] ?? '');
 	}
 
-	public function server(string $name, mixed $default = ''): mixed
+	public function server(string $name, $default = '')
 	{
 		return $_SERVER[$name] ?? $default;
 	}
