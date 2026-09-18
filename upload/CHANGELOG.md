@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.2 - 2026-09-18
+
+- Route lifecycle and bootstrap requests through the resilient public API path.
+
 ## 1.1.1 - 2026-09-16
 
 - Support SMF 2.1's PHP 7.1+ runtime range while preserving the shared API

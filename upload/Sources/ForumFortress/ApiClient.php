@@ -37,8 +37,8 @@ use function trim;
 class ApiClient
 {
 	const PLATFORM = 'smf';
-	const PLUGIN_VERSION = '1.1.1';
-	const CONTROL_PLANE_BASE_URL = 'https://fortress.ffapi.net';
+	const PLUGIN_VERSION = '1.1.2';
+	const CONTROL_PLANE_BASE_URL = 'https://api.ffapi.net';
 	const HOURLY_SYNC_MIN_INTERVAL = 540;
 	const STANDARD_HEARTBEAT_INTERVAL_SECONDS = 3600;
 	const PRO_HEARTBEAT_INTERVAL_SECONDS = 600;
