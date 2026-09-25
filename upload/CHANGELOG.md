@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.5 - 2026-09-25
+
+- Publish the full anti-spam product description in the public repository README
+  for the SMF Customization catalog.
+
 ## 1.1.4 - 2026-09-25
 
 - Rename the SMF package to `Anti Spam - Forum Fortress` so the SMF Package
