@@ -3,8 +3,9 @@
 ## 1.1.2 - 2026-09-18
 
 - Route lifecycle and bootstrap requests through the resilient public API path.
-- Publish the public GitHub README and use the package name `Anti Spam - Forum
-  Fortress` for the SMF Customization catalog.
+- Publish the README in both the public project and installable package, declare
+  it in `package-info.xml`, and use the package name `Anti Spam - Forum Fortress`
+  for the SMF Customization catalog.
 
 ## 1.1.1 - 2026-09-16
 
