@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2 - 2026-09-25
+
+- Publish the catalog-compatible project and package readmes under a clean 1.2
+  release number.
+
 ## 1.1.2 - 2026-09-18
 
 - Route lifecycle and bootstrap requests through the resilient public API path.

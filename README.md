@@ -24,10 +24,10 @@ You do not need a paid plan just to get started.
 
 Install it. Let it run. Get back to running your forum.
 
-**Current version: 1.1.2**
+**Current version: 1.2**
 
-Version 1.1.2 publishes this description in the public GitHub repository so the
-SMF Customization catalog can load it.
+Version 1.2 publishes the description both in the public GitHub project and in
+the installable package format expected by the SMF Customization catalog.
 
 Version 1.1.1 supports SMF 2.1 on PHP 7.1 and newer and fixes native staff
 checks, scheduled moderation loading, HTTPS API-key redirect handling, and

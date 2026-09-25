@@ -24,4 +24,4 @@ You do not need a paid plan just to get started.
 
 Install it. Let it run. Get back to running your forum.
 
-**Current version: 1.1.2**
+**Current version: 1.2**

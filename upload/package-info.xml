@@ -3,7 +3,7 @@
 	<id>forumfortress:protect</id>
 	<name>Anti Spam - Forum Fortress</name>
 	<type>modification</type>
-	<version>1.1.2</version>
+	<version>1.2</version>
 	<install for="2.1 - 2.1.99">
 		<readme lang="english" parsebbc="true" type="file">readme.txt</readme>
 		<require-file name="Sources/ForumFortressProtect.php" destination="$sourcedir" />
