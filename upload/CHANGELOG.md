@@ -1,23 +1,10 @@
 # Changelog
 
-## 1.1.5 - 2026-09-25
-
-- Publish the full anti-spam product description in the public repository README
-  for the SMF Customization catalog.
-
-## 1.1.4 - 2026-09-25
-
-- Rename the SMF package to `Anti Spam - Forum Fortress` so the SMF Package
-  Manager publisher identifies it correctly.
-
-## 1.1.3 - 2026-09-25
-
-- Publish the project README for the public GitHub repository and label the
-  SMF package `Anti-Spam - Forum Fortress` in the package catalogue.
-
 ## 1.1.2 - 2026-09-18
 
 - Route lifecycle and bootstrap requests through the resilient public API path.
+- Publish the public GitHub README and use the package name `Anti Spam - Forum
+  Fortress` for the SMF Customization catalog.
 
 ## 1.1.1 - 2026-09-16
 
