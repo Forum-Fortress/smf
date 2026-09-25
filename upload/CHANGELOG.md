@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.4 - 2026-09-25
+
+- Rename the SMF package to `Anti Spam - Forum Fortress` so the SMF Package
+  Manager publisher identifies it correctly.
+
 ## 1.1.3 - 2026-09-25
 
 - Publish the project README for the public GitHub repository and label the

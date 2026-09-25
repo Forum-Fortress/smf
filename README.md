@@ -1,11 +1,11 @@
-# Anti-Spam - Forum Fortress for SMF
+# Anti Spam - Forum Fortress for SMF
 
 Forum Fortress Protect connects SMF 2.1 to the hosted Forum Fortress anti-spam service. It checks registrations, posts, profile and signature changes for spam and abuse, and links suspicious activity with SMF moderation workflows. This helps forum teams stop more unwanted content with less manual review.
 
-**Current version: 1.1.3**
+**Current version: 1.1.4**
 
-Version 1.1.3 adds the public project README and the `Anti-Spam - Forum
-Fortress` package catalogue label.
+Version 1.1.4 names the package `Anti Spam - Forum Fortress` so the SMF
+Package Manager publisher can identify it correctly.
 
 Version 1.1.1 supports SMF 2.1 on PHP 7.1 and newer and fixes native staff
 checks, scheduled moderation loading, HTTPS API-key redirect handling, and
