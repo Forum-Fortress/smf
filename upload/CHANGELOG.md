@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.3 - 2026-09-25
+
+- Publish the project README for the public GitHub repository and label the
+  SMF package `Anti-Spam - Forum Fortress` in the package catalogue.
+
 ## 1.1.2 - 2026-09-18
 
 - Route lifecycle and bootstrap requests through the resilient public API path.
