@@ -29,3 +29,11 @@ function scheduled_ffprotect_hourly_sync(): bool
 	ffp_client()->hourly_sync();
 	return true;
 }
+
+function scheduled_ffprotect_repeat_ban(): bool
+{
+	global $sourcedir;
+	require_once $sourcedir . '/ForumFortress/RepeatOffenders.php';
+	\ForumFortress\Smf\RepeatOffenders::run();
+	return true;
+}

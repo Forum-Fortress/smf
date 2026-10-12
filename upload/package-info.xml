@@ -3,7 +3,7 @@
 	<id>forumfortress:protect</id>
 	<name>Anti Spam - Forum Fortress</name>
 	<type>modification</type>
-	<version>1.2</version>
+	<version>1.2.1</version>
 	<install for="2.1 - 2.1.99">
 		<readme lang="english" parsebbc="true" type="file">readme.txt</readme>
 		<require-file name="Sources/ForumFortressProtect.php" destination="$sourcedir" />
@@ -79,6 +79,7 @@
 				)
 			);
 		]]></code>
+		<code type="file">install_repeat.php</code>
 		</install>
 		<upgrade from="1.0.1 - 1.0.8" for="2.1 - 2.1.99">
 			<require-file name="Sources/ForumFortressProtect.php" destination="$sourcedir" />
@@ -155,6 +156,7 @@
 			]]></code>
 			<remove-file name="Themes/default/default/languages/ForumFortressProtect.english.php" />
 			<remove-file name="Themes/default/default/ForumFortressProtect.template.php" />
+			<code type="file">install_repeat.php</code>
 		</upgrade>
 		<upgrade from="1.1.0" for="2.1 - 2.1.99">
 			<require-file name="Sources/ForumFortressProtect.php" destination="$sourcedir" />
@@ -163,7 +165,26 @@
 			<require-dir name="Sources/ForumFortress" destination="$sourcedir" />
 			<require-file name="Themes/default/languages/ForumFortressProtect.english.php" destination="$languagedir" />
 			<require-file name="Themes/default/ForumFortressProtect.template.php" destination="$themedir" />
+			<code type="file">install_repeat.php</code>
 		</upgrade>
+	<upgrade from="1.1.1 - 1.2" for="2.1 - 2.1.99">
+		<require-file name="Sources/ForumFortressProtect.php" destination="$sourcedir" />
+		<require-file name="Sources/ForumFortressScheduled.php" destination="$sourcedir" />
+		<require-file name="Sources/ManageForumFortress.php" destination="$sourcedir" />
+		<require-dir name="Sources/ForumFortress" destination="$sourcedir" />
+		<require-file name="Themes/default/languages/ForumFortressProtect.english.php" destination="$languagedir" />
+		<require-file name="Themes/default/ForumFortressProtect.template.php" destination="$themedir" />
+		<hook hook="integrate_pre_load" function="ffp_scheduled_pre_load" file="$sourcedir/ForumFortressScheduled.php" />
+		<hook hook="integrate_register_check" function="ffp_integrate_register_check" file="$sourcedir/ForumFortressProtect.php" />
+		<hook hook="integrate_register_after" function="ffp_integrate_register_after" file="$sourcedir/ForumFortressProtect.php" />
+		<hook hook="integrate_post2_pre" function="ffp_integrate_post2_pre" file="$sourcedir/ForumFortressProtect.php" />
+		<hook hook="integrate_after_create_post" function="ffp_integrate_after_create_post" file="$sourcedir/ForumFortressProtect.php" />
+		<hook hook="integrate_profile_save" function="ffp_integrate_profile_save" file="$sourcedir/ForumFortressProtect.php" />
+		<hook hook="integrate_after_approve_posts" function="ffp_integrate_after_approve_posts" file="$sourcedir/ForumFortressProtect.php" />
+		<hook hook="integrate_modify_modifications" function="ffp_integrate_modify_modifications" file="$sourcedir/ForumFortressProtect.php" />
+		<hook hook="integrate_admin_areas" function="ffp_integrate_admin_areas" file="$sourcedir/ForumFortressProtect.php" />
+		<code type="file">install_repeat.php</code>
+	</upgrade>
 	<uninstall for="2.1 - 2.1.99">
 		<hook hook="integrate_pre_load" function="ffp_scheduled_pre_load" file="$sourcedir/ForumFortressScheduled.php" reverse="true" />
 		<hook hook="integrate_register_check" function="ffp_integrate_register_check" file="$sourcedir/ForumFortressProtect.php" reverse="true" />
@@ -174,6 +195,7 @@
 		<hook hook="integrate_after_approve_posts" function="ffp_integrate_after_approve_posts" file="$sourcedir/ForumFortressProtect.php" reverse="true" />
 		<hook hook="integrate_modify_modifications" function="ffp_integrate_modify_modifications" file="$sourcedir/ForumFortressProtect.php" reverse="true" />
 		<hook hook="integrate_admin_areas" function="ffp_integrate_admin_areas" file="$sourcedir/ForumFortressProtect.php" reverse="true" />
+		<code type="file">uninstall_repeat.php</code>
 		<code name="uninstall_cleanup.php" type="inline"><![CDATA[
 			<?php
 			global $smcFunc, $modSettings;

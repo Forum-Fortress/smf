@@ -25,17 +25,43 @@ function ModifyForumFortressSettings()
 	$client = ffp_client();
 	$action_message = '';
 
+	if (isset($_POST['ffp_portal']))
+	{
+		$portal_url = '';
+		if (checkSession('post') === '')
+		{
+			try
+			{
+				$launch = $client->portal_launch();
+				if (is_array($launch) && is_string($launch['portal_url'] ?? null) && $client->is_safe_portal_url($launch['portal_url']))
+				{
+					// Native redirect helpers expect a lowercase scheme.
+					$portal_url = 'https://' . substr($launch['portal_url'], strlen('https://'));
+				}
+			}
+			catch (\Throwable $e)
+			{
+			}
+		}
+		if ($portal_url !== '')
+		{
+			redirectexit($portal_url);
+			return;
+		}
+		$action_message = $txt['ffp_portal_error'];
+	}
+
 	if (isset($_POST['ffp_save']) && checkSession('post') === '')
 	{
 		$api_region = \FfApiResilience::normaliseApiRegion((string) ($_POST['ffprotect_api_region'] ?? 'global'));
-		updateSettings([
+		$settings = [
 			'ffprotect_enabled' => !empty($_POST['ffprotect_enabled']) ? '1' : '0',
+			'ffprotect_repeat_ban' => !empty($_POST['ffprotect_repeat_ban']) ? '1' : '0',
 			'ffprotect_api_base_url' => \FfApiResilience::apiBaseUrlForRegion($api_region),
 			'ffprotect_api_region' => $api_region,
 			'ffprotect_allow_global_fallback' => !empty($_POST['ffprotect_allow_global_fallback']) ? '1' : '0',
 			'ffprotect_preferred_endpoint' => '',
 			'ffprotect_timeout' => max(1, (int) ($_POST['ffprotect_timeout'] ?? 3)),
-			'ffprotect_api_key' => trim((string) ($_POST['ffprotect_api_key'] ?? '')),
 			'ffprotect_site_id' => trim((string) ($_POST['ffprotect_site_id'] ?? '')),
 			'ffprotect_fail_open' => !empty($_POST['ffprotect_fail_open']) ? '1' : '0',
 			'ffprotect_debug_log' => !empty($_POST['ffprotect_debug_log']) ? '1' : '0',
@@ -43,8 +69,32 @@ function ModifyForumFortressSettings()
 			'ffprotect_delete_rejected_users' => !empty($_POST['ffprotect_delete_rejected_users']) ? '1' : '0',
 			'ffprotect_bypass_administrators' => !empty($_POST['ffprotect_bypass_administrators']) ? '1' : '0',
 			'ffprotect_bypass_moderators' => !empty($_POST['ffprotect_bypass_moderators']) ? '1' : '0',
-		]);
-		$action_message = $txt['ffp_settings_saved'];
+		];
+		// Never interpret an empty write-only field as a request to remove a live key.
+		$replacement_key = trim((string) ($_POST['ffprotect_api_key'] ?? ''));
+		if ($replacement_key !== '' && preg_match('/[\r\n]/', $replacement_key))
+		{
+			$action_message = $txt['ffp_api_key_invalid'];
+		}
+		else
+		{
+			if ($replacement_key !== '')
+			{
+				$settings['ffprotect_api_key'] = $replacement_key;
+			}
+			updateSettings($settings);
+			if ($settings['ffprotect_enabled'] === '0' || $settings['ffprotect_repeat_ban'] === '0') { \ForumFortress\Smf\RepeatOffenders::cancelPending(); }
+			$action_message = $txt['ffp_settings_saved'];
+		}
+	}
+
+	// Clearing the key is deliberately separate from routine saves. Disable
+	// automatic protection first so the same request does not re-bootstrap it.
+	if (isset($_POST['ffp_clear_api_key']) && checkSession('post') === '')
+	{
+		updateSettings(['ffprotect_enabled' => '0', 'ffprotect_api_key' => '']);
+		\ForumFortress\Smf\RepeatOffenders::cancelPending();
+		$action_message = $txt['ffp_api_key_cleared'];
 	}
 
 	if (isset($_POST['ffp_test']) && checkSession('post') === '')
@@ -126,7 +176,7 @@ function ModifyForumFortressSettings()
 		}
 	}
 
-	if ($client->is_enabled() && trim((string) ($modSettings['ffprotect_api_key'] ?? '')) === '')
+	if (!empty($modSettings['ffprotect_enabled']) && $client->is_enabled() && trim((string) ($modSettings['ffprotect_api_key'] ?? '')) === '')
 	{
 		try
 		{
@@ -148,8 +198,6 @@ function ModifyForumFortressSettings()
 	$site_status = null;
 	$forum_stats = null;
 	$attack_mode_active = null;
-	$portal_launch_url = '';
-	$can_portal = false;
 	$show_registration = empty($modSettings['ffprotect_site_id']);
 
 	if ($client->is_enabled() && trim((string) ($modSettings['ffprotect_api_key'] ?? '')) !== '')
@@ -173,25 +221,9 @@ function ModifyForumFortressSettings()
 		catch (\Throwable $e)
 		{
 		}
-
-		if (trim((string) ($modSettings['ffprotect_site_id'] ?? '')) !== '')
-		{
-			try
-			{
-				$launch = $client->portal_launch();
-				if (is_array($launch) && !empty($launch['portal_url']) && $client->is_safe_portal_url((string) $launch['portal_url']))
-				{
-					$portal_launch_url = (string) $launch['portal_url'];
-					$can_portal = true;
-				}
-			}
-			catch (\Throwable $e)
-			{
-			}
-		}
 	}
 
-	$can_portal = $can_portal || (trim((string) ($modSettings['ffprotect_site_id'] ?? '')) !== '' && trim((string) ($modSettings['ffprotect_api_key'] ?? '')) !== '');
+	$can_portal = trim((string) ($modSettings['ffprotect_site_id'] ?? '')) !== '' && trim((string) ($modSettings['ffprotect_api_key'] ?? '')) !== '';
 
 	$context['page_title'] = $txt['ffp_settings_title'];
 	$context[$context['admin_menu_name']]['tab_data'] = [
@@ -203,6 +235,9 @@ function ModifyForumFortressSettings()
 	$endpoint_summary = $client->endpoint_state_summary();
 	$endpoint_snapshot = $client->endpoint_state_snapshot();
 
+	// Only non-secret configuration belongs in template context.
+	$public_settings = $modSettings;
+	unset($public_settings['ffprotect_api_key']);
 	loadTemplate('ForumFortressProtect');
 	$context['sub_template'] = 'admin_forumfortress';
 	$context['ffp'] = [
@@ -212,12 +247,14 @@ function ModifyForumFortressSettings()
 		'endpoint_summary' => $endpoint_summary,
 		'endpoint_snapshot' => $endpoint_snapshot,
 		'latency_rows' => $latency_rows,
-		'modSettings' => $modSettings,
+		'modSettings' => $public_settings,
+		'repeat_available' => \ForumFortress\Smf\RepeatOffenders::available(),
+		'repeat_recent' => \ForumFortress\Smf\RepeatOffenders::recent(),
+		'api_key_configured' => trim((string) ($modSettings['ffprotect_api_key'] ?? '')) !== '',
 		'form_url' => $scripturl . '?action=admin;area=modsettings;sa=forumfortress',
 		'site_status' => $site_status,
 		'forum_stats' => $forum_stats,
 		'attack_mode_active' => $attack_mode_active,
-		'portal_launch_url' => $portal_launch_url,
 		'can_portal' => $can_portal,
 		'show_registration' => $show_registration,
 	];

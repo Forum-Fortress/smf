@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.1 - 2026-10-12
+
+- Add default-Off, native seven-day repeat-spammer bans through a separate minutely task.
+- Persist strictly certified, deduplicated evidence after native validation, with atomic receipts, execution-time staff protections, bounded storage and safe dependency guards.
+- Add Package Manager upgrades from 1.1.1–1.2 that preserve configuration and held-post metadata, native settings/translations and runner-only rehydratable verification.
+
+
 ## 1.2 - 2026-09-25
 
 - Publish the catalog-compatible project and package readmes under a clean 1.2

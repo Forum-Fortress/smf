@@ -25,9 +25,9 @@ function template_admin_forumfortress()
 		<section class="ffCard ffHero">
 			<div class="ffHeroHeader"><div class="ffMark" aria-hidden="true"><i></i><i></i><i></i></div><div class="ffHeroCopy"><strong>Forum Fortress</strong><span>', $txt['ffp_settings_desc'], '</span></div><span class="ffPill', $connected ? ' is-connected' : '', '">', $connected ? 'Connected' : 'Configured', '</span></div>
 			<div class="ffActionGrid">';
-	if (!empty($ffp['portal_launch_url']))
+	if ($ffp['can_portal'] && !empty($ms['ffprotect_enabled']))
 	{
-		echo '<a href="', htmlspecialchars($ffp['portal_launch_url']), '" target="_blank" rel="noopener noreferrer" class="button ffButton ffButton--primary">', $txt['ffp_portal_login'], '</a>';
+		echo '<form action="', htmlspecialchars($ffp['form_url']), '" method="post" target="_blank" rel="noopener noreferrer"><input type="hidden" name="', htmlspecialchars($context['session_var']), '" value="', htmlspecialchars($context['session_id']), '"><input type="submit" name="ffp_portal" value="', $txt['ffp_portal_login'], '" class="button ffButton ffButton--primary"></form>';
 	}
 	else
 	{
@@ -78,12 +78,13 @@ function template_admin_forumfortress()
 				<dt><label for="ffprotect_allow_global_fallback">', $txt['ffp_allow_global_fallback'], '</label><br><small>', $txt['ffp_allow_global_fallback_desc'], '</small></dt><dd><input type="checkbox" name="ffprotect_allow_global_fallback" id="ffprotect_allow_global_fallback"', !empty($ms['ffprotect_allow_global_fallback']) ? ' checked' : '', '></dd>
 				<dt><label for="ffprotect_timeout">', $txt['ffp_timeout'], '</label></dt><dd><input type="number" min="1" max="30" name="ffprotect_timeout" id="ffprotect_timeout" value="', (int) ($ms['ffprotect_timeout'] ?? 3), '"></dd>
 				<dt><label for="ffprotect_fail_open">', $txt['ffp_fail_open'], '</label></dt><dd><input type="checkbox" name="ffprotect_fail_open" id="ffprotect_fail_open"', !empty($ms['ffprotect_fail_open']) ? ' checked' : '', '></dd>
-				<dt><label for="ffprotect_api_key">', $txt['ffp_api_key'], '</label></dt><dd><input type="text" name="ffprotect_api_key" id="ffprotect_api_key" size="60" value="', htmlspecialchars($ms['ffprotect_api_key'] ?? ''), '"></dd>
+				<dt><label for="ffprotect_api_key">', $txt['ffp_api_key'], '</label><br><small>', $ffp['api_key_configured'] ? $txt['ffp_api_key_configured'] : $txt['ffp_api_key_not_configured'], '. ', $txt['ffp_api_key_preserve'], '</small></dt><dd><input type="password" name="ffprotect_api_key" id="ffprotect_api_key" size="60" value="" autocomplete="new-password"></dd>
 				<dt><label for="ffprotect_site_id">', $txt['ffp_site_id'], '</label></dt><dd><input type="text" name="ffprotect_site_id" id="ffprotect_site_id" size="40" value="', htmlspecialchars($ms['ffprotect_site_id'] ?? ''), '"></dd>
 				<dt>', $txt['ffp_domain'], '</dt><dd>', htmlspecialchars($ffp['domain']), '</dd>
 			</dl>
 			<h3>', $txt['ffp_section_protection'], '</h3>
 			<dl class="settings">
+				<dt><label for="ffprotect_repeat_ban">', $txt['ffp_repeat_ban'], '</label><br><small>', $txt['ffp_repeat_desc'], '</small></dt><dd><input type="checkbox" name="ffprotect_repeat_ban" id="ffprotect_repeat_ban"', !empty($ms['ffprotect_repeat_ban']) ? ' checked' : '', '><br>', !empty($ffp['repeat_available']) ? $txt['ffp_repeat_available'] : $txt['ffp_repeat_unavailable'], '</dd>
 				<dt><label for="ffprotect_bypass_administrators">', $txt['ffp_bypass_administrators'], '</label></dt><dd><input type="checkbox" name="ffprotect_bypass_administrators" id="ffprotect_bypass_administrators"', !empty($ms['ffprotect_bypass_administrators']) ? ' checked' : '', '></dd>
 				<dt><label for="ffprotect_bypass_moderators">', $txt['ffp_bypass_moderators'], '</label></dt><dd><input type="checkbox" name="ffprotect_bypass_moderators" id="ffprotect_bypass_moderators"', !empty($ms['ffprotect_bypass_moderators']) ? ' checked' : '', '></dd>
 				<dt><label for="ffprotect_send_ham">', $txt['ffp_send_ham'], '</label></dt><dd><input type="checkbox" name="ffprotect_send_ham" id="ffprotect_send_ham"', !empty($ms['ffprotect_send_ham']) ? ' checked' : '', '></dd>
@@ -91,8 +92,12 @@ function template_admin_forumfortress()
 				<dt><label for="ffprotect_debug_log">', $txt['ffp_debug_log'], '</label></dt><dd><input type="checkbox" name="ffprotect_debug_log" id="ffprotect_debug_log"', !empty($ms['ffprotect_debug_log']) ? ' checked' : '', '></dd>
 			</dl>
 			<input type="submit" name="ffp_save" value="', $txt['save'], '" class="button ffButton ffButton--primary">
+			<input type="submit" name="ffp_clear_api_key" value="', $txt['ffp_api_key_clear'], '" class="button ffButton ffButton--quiet">
 			<input type="submit" name="ffp_test" value="', $txt['ffp_connection_test'], '" class="button ffButton ffButton--quiet">
 		</form>';
+	echo '<h3>', $txt['ffp_repeat_recent'], '</h3><ul>';
+	foreach ($ffp['repeat_recent'] ?? [] as $receipt) { echo '<li>', (int) $receipt['member_id'], ' - ', gmdate('Y-m-d H:i:s', (int) $receipt['attempted']), ' UTC</li>'; }
+	echo '</ul>';
 	$last_failure_text = $txt['ffp_none'];
 	if ($last_failure)
 	{

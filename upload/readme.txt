@@ -23,3 +23,7 @@ For larger communities, or admins running multiple forums, optional paid plans a
 You do not need a paid plan just to get started.
 
 Install it. Let it run. Get back to running your forum.
+
+[b]Version 1.2.1: optional repeat-spammer bans[/b]
+
+Off by default. Enable in Modification Settings > Forum Fortress. Two distinct certified content BLOCKs within 24 hours allow a separate native scheduled task to apply a reversible seven-day member ban. Staff and established accounts are protected. Review and reverse through the SMF Ban List. No account or content deletion. Use Package Manager Upgrade from 1.1.1–1.2 to preserve configuration.

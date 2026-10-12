@@ -16,6 +16,7 @@ require_once __DIR__ . '/ForumFortress/ApiClient.php';
 require_once __DIR__ . '/ForumFortress/DecisionMapper.php';
 require_once __DIR__ . '/ForumFortress/TimeoutQueue.php';
 require_once __DIR__ . '/ForumFortress/ModerationBridge.php';
+require_once __DIR__ . '/ForumFortress/RepeatOffenders.php';
 require_once __DIR__ . '/ManageForumFortress.php';
 
 use ForumFortress\Smf\ApiClient;
@@ -156,10 +157,11 @@ function ffp_integrate_post2_pre(&$post_errors)
 	$msg_id = (int) ($_REQUEST['msg'] ?? 0);
 	$board_id = (int) ($board ?? ($_REQUEST['board'] ?? 0));
 	$is_topic_edit = false;
+	$repeat_owner = (int) ($user_info['id'] ?? 0);
 	if ($msg_id > 0 && isset($smcFunc['db_query']))
 	{
 		$request = $smcFunc['db_query']('', '
-			SELECT m.id_topic, m.id_board, t.id_first_msg
+			SELECT m.id_topic, m.id_board, m.id_member, t.id_first_msg
 			FROM {db_prefix}messages AS m
 			INNER JOIN {db_prefix}topics AS t ON (t.id_topic = m.id_topic)
 			WHERE m.id_msg = {int:id_msg}
@@ -170,6 +172,7 @@ function ffp_integrate_post2_pre(&$post_errors)
 		$smcFunc['db_free_result']($request);
 		if (is_array($row))
 		{
+			$repeat_owner = (int) $row['id_member'];
 			$topic_id = (int) ($row['id_topic'] ?? $topic_id);
 			$board_id = (int) ($row['id_board'] ?? $board_id);
 			$is_topic_edit = $msg_id === (int) ($row['id_first_msg'] ?? 0);
@@ -178,6 +181,7 @@ function ffp_integrate_post2_pre(&$post_errors)
 	$endpoint = $msg_id > 0
 		? ($is_topic_edit ? 'topic_edit' : 'reply_edit')
 		: ($topic_id > 0 ? 'reply' : 'topic');
+	if ($msg_id > 0 && empty($row)) { $repeat_owner = 0; }
 	$is_guest = !empty($user_info['is_guest']);
 	$username = $is_guest
 		? (string) ($_POST['guestname'] ?? $user_info['name'] ?? $user_info['username'] ?? '')
@@ -224,7 +228,12 @@ function ffp_integrate_post2_pre(&$post_errors)
 	$decision = DecisionMapper::decision($response, $client->fail_open());
 	if ($decision === 'block')
 	{
+		$repeat_valid = empty($post_errors) && empty($_REQUEST['preview']) && empty($_REQUEST['xml']) && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && function_exists('checkSession') && checkSession('post', '', false) === '';
 		$post_errors[] = 'ffp_blocked';
+		if ($repeat_valid)
+		{
+			\ForumFortress\Smf\RepeatOffenders::stage($repeat_owner, $content, $response, static function () use (&$post_errors) { return $post_errors === ['ffp_blocked']; });
+		}
 	}
 }
 
