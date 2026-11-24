@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.2 - 2026-11-24
+
+- Check each registration once and reuse its request identity for timeout recovery.
+- Keep pending posts out of spam reputation while preserving native approval feedback and timeout recovery.
+- Support native Package Manager upgrades from 1.2.1.
+- Verify native signup and Package Manager upgrade on SMF 2.1.8.
+
 ## 1.2.1 - 2026-10-12
 
 - Add default-Off, native seven-day repeat-spammer bans through a separate minutely task.

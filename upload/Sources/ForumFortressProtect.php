@@ -23,11 +23,6 @@ use ForumFortress\Smf\ApiClient;
 use ForumFortress\Smf\DecisionMapper;
 use function ForumFortress\Smf\ffp_client;
 
-/** @var string|null */
-$GLOBALS['ffp_pending_register_decision'] = null;
-
-/** @var string|null */
-
 /** @var array<string, mixed>|null */
 $GLOBALS['ffp_pending_post_timeout'] = null;
 
@@ -62,13 +57,6 @@ function ffp_integrate_register_check(&$regOptions, &$reg_errors)
 	}
 	ffp_load_language();
 	global $txt;
-	try
-	{
-		$client->bootstrap_if_needed();
-	}
-	catch (\Throwable $e)
-	{
-	}
 	$payload = [
 		'ip' => (string) (($regOptions['interface'] ?? '') === 'admin' ? '127.0.0.1' : ($_SERVER['REMOTE_ADDR'] ?? '')),
 		'username' => (string) ($regOptions['username'] ?? ''),
@@ -77,7 +65,26 @@ function ffp_integrate_register_check(&$regOptions, &$reg_errors)
 		'user_agent' => (string) ($_SERVER['HTTP_USER_AGENT'] ?? ''),
 		'links' => [],
 	];
+	$previous = $regOptions['ffp_registration_check'] ?? null;
+	if ($previous !== null && $previous['payload'] === $payload)
+	{
+		if ($previous['error'] !== null && !in_array($previous['error'], $reg_errors, true))
+		{
+			$reg_errors[] = $previous['error'];
+		}
+		return;
+	}
+	try
+	{
+		$client->bootstrap_if_needed();
+	}
+	catch (\Throwable $e)
+	{
+	}
+	$regOptions['ffp_registration_check'] = ['payload' => $payload, 'decision' => null, 'error' => null];
+	$payload['check_request_id'] = bin2hex(random_bytes(16));
 	$response = ffp_run_check($client, 'register', $payload);
+	$error = null;
 	if ($response === null && $client->last_check_had_timeout())
 	{
 		$client->queue_timeout_recovery('register', $payload, [
@@ -87,20 +94,26 @@ function ffp_integrate_register_check(&$regOptions, &$reg_errors)
 		]);
 		if (!$client->fail_open())
 		{
-			$reg_errors[] = ['lang', 'ffp_blocked', false];
+			$error = ['lang', 'ffp_blocked', false];
 		}
-		return;
 	}
-	if (DecisionMapper::is_above_limit($response) && !$client->fail_open())
+	elseif (DecisionMapper::is_above_limit($response) && !$client->fail_open())
 	{
-		$reg_errors[] = ['lang', 'ffp_above_limit', false];
-		return;
+		$error = ['lang', 'ffp_above_limit', false];
 	}
-	$decision = DecisionMapper::decision($response, $client->fail_open());
-	$GLOBALS['ffp_pending_register_decision'] = $decision;
-	if ($decision === 'block')
+	else
 	{
-		$reg_errors[] = ['lang', 'ffp_blocked', false];
+		$decision = DecisionMapper::decision($response, $client->fail_open());
+		$regOptions['ffp_registration_check']['decision'] = $decision;
+		if ($decision === 'block')
+		{
+			$error = ['lang', 'ffp_blocked', false];
+		}
+	}
+	if ($error !== null)
+	{
+		$regOptions['ffp_registration_check']['error'] = $error;
+		$reg_errors[] = $error;
 	}
 }
 
@@ -111,26 +124,13 @@ function ffp_integrate_register_after($regOptions, $memberID)
 	{
 		return;
 	}
-	$decision = $GLOBALS['ffp_pending_register_decision'] ?? null;
-	if (
-		$decision === 'block'
-		&& $client->delete_rejected_users_enabled()
-		&& function_exists('allowedTo')
-		&& allowedTo('admin_forum')
-	)
+	$decision = $regOptions['ffp_registration_check']['decision'] ?? null;
+	if ((int) $memberID > 0 && $decision === 'block'
+		&& $client->delete_rejected_users_enabled() && function_exists('allowedTo') && allowedTo('admin_forum'))
 	{
 		require_once $GLOBALS['sourcedir'] . '/Subs-Members.php';
 		deleteMembers((int) $memberID);
 	}
-	$client->report('register', [
-		'event_type' => 'register',
-		'ip' => (string) ($regOptions['register_vars']['member_ip'] ?? ''),
-		'username' => (string) ($regOptions['username'] ?? ''),
-		'email' => (string) ($regOptions['email'] ?? ''),
-		'email_domain' => ApiClient::email_domain((string) ($regOptions['email'] ?? '')),
-		'payload' => ['smf_member_id' => (int) $memberID],
-	]);
-	$GLOBALS['ffp_pending_register_decision'] = null;
 }
 
 function ffp_integrate_post2_pre(&$post_errors)
@@ -239,7 +239,6 @@ function ffp_integrate_post2_pre(&$post_errors)
 
 function ffp_integrate_after_create_post($msgOptions, $topicOptions, $posterOptions, $message_columns, $message_parameters)
 {
-	global $user_info;
 	$client = ffp_client();
 	if (!$client->is_enabled())
 	{
@@ -255,23 +254,6 @@ function ffp_integrate_after_create_post($msgOptions, $topicOptions, $posterOpti
 			(array) ($pending['payload'] ?? [])
 		);
 		$GLOBALS['ffp_pending_post_timeout'] = null;
-	}
-	if (empty($msgOptions['approved']))
-	{
-		$message = (string) ($msgOptions['body'] ?? '');
-		$client->report('moderation', [
-			'event_type' => empty($topicOptions['first_msg']) ? 'topic' : 'reply',
-			'ip' => (string) ($user_info['ip'] ?? ''),
-			'username' => (string) ($user_info['username'] ?? ''),
-			'domain' => $client->get_domain(),
-			'links' => ApiClient::filter_external_links(ApiClient::extract_links($message), $client->get_domain()),
-			'content_hash' => $message !== '' ? hash('sha256', $message) : null,
-			'payload' => [
-				'msg_id' => $msg_id,
-				'topic_id' => (int) ($topicOptions['id'] ?? 0),
-				'board_id' => (int) ($topicOptions['board'] ?? 0),
-			],
-		]);
 	}
 }
 

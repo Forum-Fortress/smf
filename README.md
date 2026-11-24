@@ -24,7 +24,9 @@ You do not need a paid plan just to get started.
 
 Install it. Let it run. Get back to running your forum.
 
-**Current version: 1.2.1**
+**Current version: 1.2.2**
+
+Version 1.2.2 uses one Forum Fortress check per signup and preserves the check ID during retries. Explicit native approval still sends legitimate feedback.
 
 Version 1.2 publishes the description both in the public GitHub project and in
 the installable package format expected by the SMF Customization catalog.
@@ -89,7 +91,7 @@ rsync -a /path/to/plugins/smf/upload/ /var/www/html/smf/
 
 Then install via Package Manager or register hooks manually.
 
-**Upgrading 1.1.1–1.2:** use the native Package Manager upgrade action. It preserves existing credentials, identity, routing, fail-open settings and approval metadata. The new repeat-ban setting starts Off. Back up files and the database first; uninstall is a separate removal operation.
+**Upgrading versions 1.1.1 through 1.2.1:** use the native Package Manager upgrade action. It preserves existing credentials, identity, routing, fail-open settings and approval metadata. The new repeat-ban setting starts Off. Back up the files and database before upgrading.
 
 ## Live dev box
 

@@ -24,6 +24,10 @@ You do not need a paid plan just to get started.
 
 Install it. Let it run. Get back to running your forum.
 
+[b]Version 1.2.2: registration checks[/b]
+
+Forum Fortress uses one check per signup and preserves the check ID during retries. Use Package Manager Upgrade from 1.1.1 through 1.2.1 to preserve configuration.
+
 [b]Version 1.2.1: optional repeat-spammer bans[/b]
 
-Off by default. Enable in Modification Settings > Forum Fortress. Two distinct certified content BLOCKs within 24 hours allow a separate native scheduled task to apply a reversible seven-day member ban. Staff and established accounts are protected. Review and reverse through the SMF Ban List. No account or content deletion. Use Package Manager Upgrade from 1.1.1–1.2 to preserve configuration.
+Off by default. Enable in Modification Settings > Forum Fortress. Two distinct certified content BLOCKs within 24 hours allow a separate native scheduled task to apply a reversible seven-day member ban. Staff and established accounts are protected. Review and reverse through the SMF Ban List. No account or content deletion.
