@@ -58,7 +58,7 @@ function ffp_integrate_register_check(&$regOptions, &$reg_errors)
 	ffp_load_language();
 	global $txt;
 	$payload = [
-		'ip' => (string) (($regOptions['interface'] ?? '') === 'admin' ? '127.0.0.1' : ($_SERVER['REMOTE_ADDR'] ?? '')),
+		'ip' => ($regOptions['interface'] ?? '') === 'admin' ? '127.0.0.1' : $client->client_ip(),
 		'username' => (string) ($regOptions['username'] ?? ''),
 		'email' => (string) ($regOptions['email'] ?? ''),
 		'email_domain' => ApiClient::email_domain((string) ($regOptions['email'] ?? '')),
@@ -196,7 +196,7 @@ function ffp_integrate_post2_pre(&$post_errors)
 	}
 	$links = ApiClient::filter_external_links(ApiClient::extract_links($content), $client->get_domain());
 	$payload = [
-		'ip' => (string) ($user_info['ip'] ?? ''),
+		'ip' => $client->client_ip(),
 		'username' => $username,
 		'email' => $email,
 		'user_agent' => (string) ($_SERVER['HTTP_USER_AGENT'] ?? ''),
@@ -283,7 +283,7 @@ function ffp_integrate_profile_save(&$profile_vars, &$post_errors, $memID, $cur_
 		if ($sig !== '')
 		{
 			$response = ffp_run_check($client, 'signature_edit', [
-				'ip' => (string) ($user_info['ip'] ?? ''),
+				'ip' => $client->client_ip(),
 				'username' => (string) ($user_info['username'] ?? ''),
 				'content_id' => (string) $memID,
 				'signature_text' => $sig,
@@ -309,7 +309,7 @@ function ffp_integrate_profile_save(&$profile_vars, &$post_errors, $memID, $cur_
 		return;
 	}
 	$response = ffp_run_check($client, 'profile_edit', [
-		'ip' => (string) ($user_info['ip'] ?? ''),
+		'ip' => $client->client_ip(),
 		'username' => (string) ($user_info['username'] ?? ''),
 		'content_id' => (string) $memID,
 		'content' => $profile_text,

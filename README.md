@@ -24,7 +24,7 @@ You do not need a paid plan just to get started.
 
 Install it. Let it run. Get back to running your forum.
 
-**Current version: 1.2.2**
+**Current source version: 1.2.3**
 
 Version 1.2.2 uses one Forum Fortress check per signup and preserves the check ID during retries. Explicit native approval still sends legitimate feedback.
 

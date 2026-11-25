@@ -3,7 +3,7 @@
 	<id>forumfortress:protect</id>
 	<name>Anti Spam - Forum Fortress</name>
 	<type>modification</type>
-	<version>1.2.2</version>
+	<version>1.2.3</version>
 	<install for="2.1 - 2.1.99">
 		<readme lang="english" parsebbc="true" type="file">readme.txt</readme>
 		<require-file name="Sources/ForumFortressProtect.php" destination="$sourcedir" />
@@ -167,7 +167,7 @@
 			<require-file name="Themes/default/ForumFortressProtect.template.php" destination="$themedir" />
 			<code type="file">install_repeat.php</code>
 		</upgrade>
-	<upgrade from="1.1.1 - 1.2.1" for="2.1 - 2.1.99">
+	<upgrade from="1.1.1 - 1.2.2" for="2.1 - 2.1.99">
 		<require-file name="Sources/ForumFortressProtect.php" destination="$sourcedir" />
 		<require-file name="Sources/ForumFortressScheduled.php" destination="$sourcedir" />
 		<require-file name="Sources/ManageForumFortress.php" destination="$sourcedir" />

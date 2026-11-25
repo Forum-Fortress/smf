@@ -3,8 +3,10 @@
 namespace ForumFortress\Smf;
 
 require_once __DIR__ . '/FfApiResilience.php';
+require_once __DIR__ . '/ClientIp.php';
 
 
+use ForumFortress\Proxy\ClientIp;
 use function array_merge;
 use function bin2hex;
 use function explode;
@@ -37,7 +39,7 @@ use function trim;
 class ApiClient
 {
 	const PLATFORM = 'smf';
-	const PLUGIN_VERSION = '1.2.2';
+	const PLUGIN_VERSION = '1.2.3';
 	const CONTROL_PLANE_BASE_URL = 'https://api.ffapi.net';
 	const HOURLY_SYNC_MIN_INTERVAL = 540;
 	const STANDARD_HEARTBEAT_INTERVAL_SECONDS = 3600;
@@ -1434,12 +1436,17 @@ class ApiClient
 			$this->allow_global_emergency_fallback()
 		);
 	}
+	public function client_ip(): string
+	{
+		return ClientIp::resolve((string) $this->user->ip, $_SERVER);
+	}
+
 	public function build_user_payload(array $user_row = []): array
 	{
 		$email = trim((string) ($user_row['user_email'] ?? ''));
 		$email_domain = self::email_domain($email);
 		return [
-			'ip' => (string) $this->user->ip,
+			'ip' => $this->client_ip(),
 			'username' => (string) ($user_row['username'] ?? $this->user->data['username'] ?? ''),
 			'email' => $email !== '' ? $email : null,
 			'email_domain' => $email_domain,

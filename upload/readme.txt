@@ -24,6 +24,9 @@ You do not need a paid plan just to get started.
 
 Install it. Let it run. Get back to running your forum.
 
+[b]Version 1.2.3[/b]
+Reports the visitor IP automatically behind reverse proxies that forward it.
+
 [b]Version 1.2.2: registration checks[/b]
 
 Forum Fortress uses one check per signup and preserves the check ID during retries. Use Package Manager Upgrade from 1.1.1 through 1.2.1 to preserve configuration.

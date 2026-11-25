@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.3 - 2026-11-25
+
+- Report the visitor IP automatically behind reverse proxies that forward it.
+
 ## 1.2.2 - 2026-11-24
 
 - Check each registration once and reuse its request identity for timeout recovery.
