@@ -1,18 +1,14 @@
-# Anti-Spam - Forum Fortress
+# Forum Fortress anti-spam plugin for Simple Machines Forum
 
-Instant, privacy-friendly spam protection. No endless settings. Just less spam.
-
-Built by and for forum admins, Forum Fortress is designed to start protecting your community with almost no setup.
+Forum Fortress helps Simple Machines Forum 2.1 admins catch spam registrations,
+posts, profiles and signatures through its hosted anti-spam service.
 
 ## Install the plugin
 
-Spam protection starts immediately.
-
-Optionally register in the Forum Fortress portal.
-
-That’s it.
-
-Forum Fortress helps protect registrations, posts and other common abuse points without forcing your users through endless CAPTCHAs or giving administrators another complicated system to babysit.
+Get the current package from the [SMF plugin page](https://forumfortress.com/platforms/smf/)
+and upload it through SMF Package Manager. The [SMF installation guide](https://forumfortress.com/docs/install/smf/)
+explains how to connect your forum and check that it is protected.
+For help, [contact Forum Fortress](https://forumfortress.com/support/#contact).
 
 ## Simple pricing
 
@@ -78,7 +74,7 @@ This produces `plugins/forumfortress-smf-{version}.tar.gz` (and `.sha256`) for S
 
 ## Install on a forum
 
-1. Download `forumfortress-smf-*.tar.gz` from [forumfortress.com/#platforms](https://forumfortress.com/#platforms), or build with `build_release.py` above.
+1. Download `forumfortress-smf-*.tar.gz` from the [SMF plugin page](https://forumfortress.com/platforms/smf/), or build with `build_release.py` above.
 2. SMF Admin → **Configuration → Modification Packages → Upload package**.
 3. Install/enable the package.
 4. **Configuration → Modification Settings → Forum Fortress**.
